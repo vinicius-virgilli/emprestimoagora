@@ -23,6 +23,9 @@ public class SimulacaoService {
 
     @Inject
     ProdutoRepository produtoRepository;
+    
+    @Inject
+    CacheService cacheService;
 
     /**
      * Processa uma solicitação de simulação de empréstimo
@@ -69,10 +72,11 @@ public class SimulacaoService {
 
     /**
      * Busca produto compatível com os parâmetros da simulação
+     * Utiliza cache com atualização automática a cada minuto
      */
     private Produto buscarProdutoCompativel(BigDecimal valorDesejado, Short prazo) {
-        // Buscar produtos que atendem aos critérios
-        List<Produto> produtosCompativeis = produtoRepository.findProdutosParaEmprestimo(
+        // Buscar produtos que atendem aos critérios usando cache
+        List<Produto> produtosCompativeis = cacheService.buscarProdutosCompativeis(
             valorDesejado, prazo
         );
         
