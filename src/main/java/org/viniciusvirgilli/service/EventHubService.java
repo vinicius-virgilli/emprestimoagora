@@ -19,7 +19,7 @@ public class EventHubService {
     
     private final ObjectMapper objectMapper;
 
-    @ConfigProperty(name = "eventhub.connection.string", defaultValue = "")
+    @ConfigProperty(name = "eventhub.connection.string")
     String eventHubConnectionString;
 
     @ConfigProperty(name = "eventhub.name", defaultValue = "simulacao-eventos")

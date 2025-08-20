@@ -1,6 +1,9 @@
-version: '3.8'
-
 services:
+  # =============================================================================
+  # BANCO DE DADOS POSTGRESQL
+  # Banco principal da aplicação para desenvolvimento
+  # Porta: 5432 | Database: emprestimoagora_dev | User: emprestimoagora
+  # =============================================================================
   postgres-dev:
     image: postgres:15-alpine
     container_name: emprestimoagora-postgres-dev
@@ -23,40 +26,100 @@ services:
       timeout: 5s
       retries: 5
 
-  # Opcional: PgAdmin para administração do banco
-  pgadmin:
-    image: dpage/pgadmin4:latest
-    container_name: emprestimoagora-pgadmin
-    environment:
-      PGADMIN_DEFAULT_EMAIL: admin@emprestimoagora.com
-      PGADMIN_DEFAULT_PASSWORD: admin123
+  # =============================================================================
+  # AZURE STORAGE EMULATOR (AZURITE)
+  # Simula Azure Blob Storage, Queue Storage e Table Storage localmente
+  # Portas: 10000 (Blob), 10001 (Queue), 10002 (Table)
+  # =============================================================================
+  azurite:
+    image: mcr.microsoft.com/azure-storage/azurite
+    container_name: emprestimoagora-azurite
     ports:
-      - "5050:80"
-    depends_on:
-      - postgres-dev
+      - "10000:10000" # Blob service - armazenamento de arquivos
+      - "10001:10001" # Queue service - filas de mensagens
+      - "10002:10002" # Table service - armazenamento NoSQL
+    volumes:
+      - azurite_data:/data
     networks:
       - emprestimoagora-network
+    restart: unless-stopped
     profiles:
-      - tools
+      - dev
+      - eventhub
+      - storage
 
-  # Simulador do Azure Event Hub para desenvolvimento
+  # =============================================================================
+  # AZURE EVENT HUB EMULATOR
+  # Simula Azure Event Hub para desenvolvimento local
+  # Portas: 5672 (AMQP), 9093 (Kafka)
+  # Usado para: Streaming de eventos, telemetria, logs de auditoria
+  # =============================================================================
   eventhub-simulator:
     image: mcr.microsoft.com/azure-messaging/eventhubs-emulator:latest
     container_name: emprestimoagora-eventhub
     environment:
       ACCEPT_EULA: Y
+      BLOB_SERVER: azurite
+      METADATA_SERVER: azurite
     ports:
-      - "5672:5672"   # AMQP
-      - "9093:9093"   # Kafka
+      - "5672:5672"   # AMQP - protocolo de mensageria
+      - "9093:9093"   # Kafka - protocolo de streaming
+    volumes:
+      - eventhub_data:/eventhub/emulator/data
     networks:
       - emprestimoagora-network
+    depends_on:
+      - azurite
+    restart: unless-stopped
     profiles:
       - dev
+      - eventhub
 
+  # =============================================================================
+  # KAFDROP - Kafka Web UI para Event Hub Emulator
+  # Portas: 9000
+  # Permite visualizar tópicos, mensagens e consumidores
+  # =============================================================================
+  kafdrop:
+    image: obsidiandynamics/kafdrop
+    container_name: kafdrop
+    environment:
+      KAFKA_BROKERCONNECT: "emprestimoagora-eventhub:9093"
+      JVM_OPTS: "-Xms32M -Xmx64M"
+    ports:
+      - "9000:9000"
+    networks:
+      - emprestimoagora-network
+    depends_on:
+      - eventhub-simulator
+    restart: unless-stopped
+    profiles:
+      - dev
+      - eventhub
+
+# =============================================================================
+# VOLUMES PERSISTENTES
+# Armazenamento de dados que persiste entre reinicializações dos containers
+# =============================================================================
 volumes:
   postgres_data:
     driver: local
+    name: emprestimoagora_postgres_data
+  
+  azurite_data:
+    driver: local
+    name: emprestimoagora_azurite_data
+  
+  eventhub_data:
+    driver: local
+    name: emprestimoagora_eventhub_data
+  
 
+# =============================================================================
+# REDES
+# Rede interna para comunicação entre containers
+# =============================================================================
 networks:
   emprestimoagora-network:
     driver: bridge
+    name: emprestimoagora_network

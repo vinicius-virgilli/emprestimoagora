@@ -1,0 +1,376 @@
+{
+  "info": {
+    "name": "Azurite Storage APIs - EmprestimoAgora",
+    "description": "Coleção para acessar as APIs do Azurite (Azure Storage Emulator) e visualizar mensagens do EventHub",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "version": "1.0.0"
+  },
+  "variable": [
+    {
+      "key": "azurite_host",
+      "value": "localhost",
+      "type": "string"
+    },
+    {
+      "key": "blob_port",
+      "value": "10000",
+      "type": "string"
+    },
+    {
+      "key": "queue_port",
+      "value": "10001",
+      "type": "string"
+    },
+    {
+      "key": "table_port",
+      "value": "10002",
+      "type": "string"
+    },
+    {
+      "key": "account_name",
+      "value": "devstoreaccount1",
+      "type": "string"
+    },
+    {
+      "key": "account_key",
+      "value": "Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Blob Storage",
+      "item": [
+        {
+          "name": "List Containers",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-ms-version",
+                "value": "2020-04-08",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "http://{{azurite_host}}:{{blob_port}}/{{account_name}}?comp=list",
+              "protocol": "http",
+              "host": [
+                "{{azurite_host}}"
+              ],
+              "port": "{{blob_port}}",
+              "path": [
+                "{{account_name}}"
+              ],
+              "query": [
+                {
+                  "key": "comp",
+                  "value": "list"
+                }
+              ]
+            },
+            "description": "Lista todos os containers no Blob Storage"
+          },
+          "response": []
+        },
+        {
+          "name": "List Blobs in Container",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-ms-version",
+                "value": "2020-04-08",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "http://{{azurite_host}}:{{blob_port}}/{{account_name}}/eventhub-data?restype=container&comp=list",
+              "protocol": "http",
+              "host": [
+                "{{azurite_host}}"
+              ],
+              "port": "{{blob_port}}",
+              "path": [
+                "{{account_name}}",
+                "eventhub-data"
+              ],
+              "query": [
+                {
+                  "key": "restype",
+                  "value": "container"
+                },
+                {
+                  "key": "comp",
+                  "value": "list"
+                }
+              ]
+            },
+            "description": "Lista blobs no container eventhub-data onde ficam as mensagens"
+          },
+          "response": []
+        },
+        {
+          "name": "Download Blob (Message)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-ms-version",
+                "value": "2020-04-08",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "http://{{azurite_host}}:{{blob_port}}/{{account_name}}/eventhub-data/{{blob_name}}",
+              "protocol": "http",
+              "host": [
+                "{{azurite_host}}"
+              ],
+              "port": "{{blob_port}}",
+              "path": [
+                "{{account_name}}",
+                "eventhub-data",
+                "{{blob_name}}"
+              ]
+            },
+            "description": "Baixa o conteúdo de um blob específico (mensagem do EventHub). Substitua {{blob_name}} pelo nome do blob."
+          },
+          "response": []
+        }
+      ],
+      "description": "APIs para acessar o Blob Storage do Azurite onde ficam armazenadas as mensagens do EventHub"
+    },
+    {
+      "name": "Queue Storage",
+      "item": [
+        {
+          "name": "List Queues",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-ms-version",
+                "value": "2020-04-08",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "http://{{azurite_host}}:{{queue_port}}/{{account_name}}?comp=list",
+              "protocol": "http",
+              "host": [
+                "{{azurite_host}}"
+              ],
+              "port": "{{queue_port}}",
+              "path": [
+                "{{account_name}}"
+              ],
+              "query": [
+                {
+                  "key": "comp",
+                  "value": "list"
+                }
+              ]
+            },
+            "description": "Lista todas as filas no Queue Storage"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Queue Messages",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-ms-version",
+                "value": "2020-04-08",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "http://{{azurite_host}}:{{queue_port}}/{{account_name}}/{{queue_name}}/messages",
+              "protocol": "http",
+              "host": [
+                "{{azurite_host}}"
+              ],
+              "port": "{{queue_port}}",
+              "path": [
+                "{{account_name}}",
+                "{{queue_name}}",
+                "messages"
+              ]
+            },
+            "description": "Obtém mensagens de uma fila específica. Substitua {{queue_name}} pelo nome da fila."
+          },
+          "response": []
+        }
+      ],
+      "description": "APIs para acessar o Queue Storage do Azurite"
+    },
+    {
+      "name": "Table Storage",
+      "item": [
+        {
+          "name": "List Tables",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-ms-version",
+                "value": "2020-04-08",
+                "type": "text"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json;odata=nometadata",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "http://{{azurite_host}}:{{table_port}}/{{account_name}}/Tables",
+              "protocol": "http",
+              "host": [
+                "{{azurite_host}}"
+              ],
+              "port": "{{table_port}}",
+              "path": [
+                "{{account_name}}",
+                "Tables"
+              ]
+            },
+            "description": "Lista todas as tabelas no Table Storage"
+          },
+          "response": []
+        },
+        {
+          "name": "Query Table Entities",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-ms-version",
+                "value": "2020-04-08",
+                "type": "text"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json;odata=nometadata",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "http://{{azurite_host}}:{{table_port}}/{{account_name}}/{{table_name}}",
+              "protocol": "http",
+              "host": [
+                "{{azurite_host}}"
+              ],
+              "port": "{{table_port}}",
+              "path": [
+                "{{account_name}}",
+                "{{table_name}}"
+              ]
+            },
+            "description": "Consulta entidades de uma tabela específica. Substitua {{table_name}} pelo nome da tabela."
+          },
+          "response": []
+        }
+      ],
+      "description": "APIs para acessar o Table Storage do Azurite onde podem estar armazenados metadados das mensagens"
+    },
+    {
+      "name": "EventHub Monitoring",
+      "item": [
+        {
+          "name": "Check EventHub Container",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-ms-version",
+                "value": "2020-04-08",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "http://{{azurite_host}}:{{blob_port}}/{{account_name}}/eventhub?restype=container&comp=list",
+              "protocol": "http",
+              "host": [
+                "{{azurite_host}}"
+              ],
+              "port": "{{blob_port}}",
+              "path": [
+                "{{account_name}}",
+                "eventhub"
+              ],
+              "query": [
+                {
+                  "key": "restype",
+                  "value": "container"
+                },
+                {
+                  "key": "comp",
+                  "value": "list"
+                }
+              ]
+            },
+            "description": "Verifica se existe container 'eventhub' e lista seus blobs"
+          },
+          "response": []
+        },
+        {
+          "name": "Check Simulacao Container",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-ms-version",
+                "value": "2020-04-08",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "http://{{azurite_host}}:{{blob_port}}/{{account_name}}/simulacao?restype=container&comp=list",
+              "protocol": "http",
+              "host": [
+                "{{azurite_host}}"
+              ],
+              "port": "{{blob_port}}",
+              "path": [
+                "{{account_name}}",
+                "simulacao"
+              ],
+              "query": [
+                {
+                  "key": "restype",
+                  "value": "container"
+                },
+                {
+                  "key": "comp",
+                  "value": "list"
+                }
+              ]
+            },
+            "description": "Verifica se existe container 'simulacao' onde podem estar as mensagens de simulação"
+          },
+          "response": []
+        }
+      ],
+      "description": "Endpoints específicos para monitorar mensagens do EventHub no Azurite"
+    }
+  ],
+  "auth": {
+    "type": "noauth"
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Script para configurar autenticação automática se necessário",
+          "// O Azurite usa conta padrão devstoreaccount1 sem autenticação complexa"
+        ]
+      }
+    }
+  ]
+}
