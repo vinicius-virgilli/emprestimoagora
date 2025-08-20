@@ -7,12 +7,14 @@ import jakarta.validation.constraints.Positive;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
+import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
+
 /**
  * Entidade que representa uma simulação realizada e persistida no banco local
  */
 @Entity
 @Table(name = "simulacao_realizada")
-public class SimulacaoRealizada {
+public class SimulacaoRealizada extends PanacheEntityBase {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -41,7 +43,7 @@ public class SimulacaoRealizada {
     private Short prazoMeses;
 
     @NotNull
-    @Column(name = "taxa_juros", precision = 5, scale = 2)
+    @Column(name = "taxa_juros", precision = 10, scale = 9)
     private BigDecimal taxaJuros;
 
     @NotNull
