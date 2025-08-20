@@ -5,8 +5,13 @@ import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import org.viniciusvirgilli.dto.*;
 import org.viniciusvirgilli.entity.SimulacaoRealizada;
+import org.viniciusvirgilli.enums.TipoSimulacao;
 import org.viniciusvirgilli.repository.SimulacaoRealizadaRepository;
+import org.viniciusvirgilli.util.CalculadoraUtil;
 
+import com.arjuna.ats.arjuna.common.recoveryPropertyManager;
+
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -54,8 +59,8 @@ public class PersistenciaService {
                 request.getValorDesejado(),
                 request.getPrazo(),
                 response.getTaxaJuros(),
-                calcularValorTotalSAC(response),
-                calcularValorTotalPRICE(response),
+                calcularValorTotalParcelas(response, TipoSimulacao.SAC),
+                calcularValorTotalParcelas(response, TipoSimulacao.PRICE),
                 LocalDateTime.now()
             );
 
@@ -146,23 +151,17 @@ public class PersistenciaService {
     /**
      * Calcula o valor total das parcelas SAC
      */
-    private java.math.BigDecimal calcularValorTotalSAC(SimulacaoResponseDTO response) {
-        return response.getResultadosSimulacao().stream()
-            .filter(r -> r.getTipo().name().equals("SAC"))
-            .flatMap(r -> r.getParcelas().stream())
-            .map(ParcelaDTO::getValorPrestacao)
-            .reduce(java.math.BigDecimal.ZERO, java.math.BigDecimal::add);
-    }
+    private BigDecimal calcularValorTotalParcelas(SimulacaoResponseDTO response, TipoSimulacao tipo) {
+        ResultadoSimulacaoDTO resultadoSimulacao = response.getResultadosSimulacao().stream()
+            .filter(resultado -> resultado.getTipo() == tipo)
+            .findFirst()
+            .orElse(null);
 
-    /**
-     * Calcula o valor total das parcelas PRICE
-     */
-    private java.math.BigDecimal calcularValorTotalPRICE(SimulacaoResponseDTO response) {
-        return response.getResultadosSimulacao().stream()
-            .filter(r -> r.getTipo().name().equals("PRICE"))
-            .flatMap(r -> r.getParcelas().stream())
-            .map(ParcelaDTO::getValorPrestacao)
-            .reduce(java.math.BigDecimal.ZERO, java.math.BigDecimal::add);
+        List<ParcelaDTO> parcelasSimulacao = resultadoSimulacao.getParcelas();
+
+        BigDecimal valorTotalSimulacao = CalculadoraUtil.calcularValorTotalDasParcelas(parcelasSimulacao);
+
+        return valorTotalSimulacao;
     }
 
     /**
