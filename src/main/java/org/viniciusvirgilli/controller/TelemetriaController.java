@@ -72,19 +72,28 @@ public class TelemetriaController {
             
             // Buscar dados de telemetria
             TelemetriaResponseDTO telemetria = persistenciaService.buscarTelemetria(LocalDate.now());
+            LOGGER.info("Dados de telemetria obtidos com sucesso");
             
             // Adicionar estatísticas do Event Hub
-            EventHubService.EventHubStats eventHubStats = eventHubService.obterEstatisticas();
-            
-            // Enriquecer com dados do Event Hub
-            telemetria.getListaEndpoints().add(new TelemetriaEndpointDTO(
-                "event-hub",
-                eventHubStats.eventosEnviados != null ? eventHubStats.eventosEnviados.intValue() : 0,
-                eventHubStats.tempoMedioEnvio != null ? eventHubStats.tempoMedioEnvio.intValue() : 0,
-                50, // tempo mínimo simulado
-                200, // tempo máximo simulado
-                java.math.BigDecimal.valueOf(0.95) // percentual de sucesso simulado
-            ));
+            try {
+                EventHubService.EventHubStats eventHubStats = eventHubService.obterEstatisticas();
+                LOGGER.info("Estatísticas do EventHub obtidas: " + eventHubStats);
+                
+                // Enriquecer com dados do Event Hub
+                telemetria.getListaEndpoints().add(new TelemetriaEndpointDTO(
+                    "event-hub",
+                    eventHubStats.eventosEnviados != null ? eventHubStats.eventosEnviados.intValue() : 0,
+                    eventHubStats.tempoMedioEnvio != null ? eventHubStats.tempoMedioEnvio.intValue() : 0,
+                    50, // tempo mínimo simulado
+                    200, // tempo máximo simulado
+                    java.math.BigDecimal.valueOf(0.95) // percentual de sucesso simulado
+                ));
+                LOGGER.info("Dados do EventHub adicionados à telemetria");
+            } catch (Exception eventHubError) {
+                LOGGER.warning("Erro ao obter estatísticas do EventHub: " + eventHubError.getMessage());
+                eventHubError.printStackTrace();
+                // Continuar sem os dados do EventHub
+            }
             
             long endTime = System.currentTimeMillis();
             long tempoResposta = endTime - startTime;
