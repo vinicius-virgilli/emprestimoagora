@@ -2,14 +2,14 @@ services:
   # =============================================================================
   # BANCO DE DADOS POSTGRESQL
   # Banco principal da aplicação para desenvolvimento
-  # Porta: 5432 | Database: emprestimoagora_dev | User: emprestimoagora
+  # Porta: 5432 | Database: api_emprestimo_agora_dev | User: api_emprestimo_agora
   # =============================================================================
   postgres-dev:
     image: postgres:15-alpine
-    container_name: emprestimoagora-postgres-dev
+    container_name: api-emprestimo-agora-postgres-dev
     environment:
-      POSTGRES_DB: emprestimoagora_dev
-      POSTGRES_USER: emprestimoagora
+      POSTGRES_DB: api_emprestimo_agora_dev
+      POSTGRES_USER: api_emprestimo_agora
       POSTGRES_PASSWORD: dev123456
       POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --lc-collate=C --lc-ctype=C"
     ports:
@@ -18,10 +18,10 @@ services:
       - postgres_data:/var/lib/postgresql/data
       - ./src/main/resources/db/migration:/docker-entrypoint-initdb.d
     networks:
-      - emprestimoagora-network
+      - api-emprestimo-agora-network
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U emprestimoagora -d emprestimoagora_dev"]
+      test: ["CMD-SHELL", "pg_isready -U api_emprestimo_agora -d api_emprestimo_agora_dev"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -33,7 +33,7 @@ services:
   # =============================================================================
   azurite:
     image: mcr.microsoft.com/azure-storage/azurite
-    container_name: emprestimoagora-azurite
+    container_name: api-emprestimo-agora-azurite
     ports:
       - "10000:10000" # Blob service - armazenamento de arquivos
       - "10001:10001" # Queue service - filas de mensagens
@@ -41,7 +41,7 @@ services:
     volumes:
       - azurite_data:/data
     networks:
-      - emprestimoagora-network
+      - api-emprestimo-agora-network
     restart: unless-stopped
     profiles:
       - dev
@@ -56,7 +56,7 @@ services:
   # =============================================================================
   eventhub-simulator:
     image: mcr.microsoft.com/azure-messaging/eventhubs-emulator:latest
-    container_name: emprestimoagora-eventhub
+    container_name: api-emprestimo-agora-eventhub
     environment:
       ACCEPT_EULA: Y
       BLOB_SERVER: azurite
@@ -67,7 +67,7 @@ services:
     volumes:
       - eventhub_data:/eventhub/emulator/data
     networks:
-      - emprestimoagora-network
+      - api-emprestimo-agora-network
     depends_on:
       - azurite
     restart: unless-stopped
@@ -84,12 +84,12 @@ services:
     image: obsidiandynamics/kafdrop
     container_name: kafdrop
     environment:
-      KAFKA_BROKERCONNECT: "emprestimoagora-eventhub:9093"
+      KAFKA_BROKERCONNECT: "api-emprestimo-agora-eventhub:9093"
       JVM_OPTS: "-Xms32M -Xmx64M"
     ports:
       - "9000:9000"
     networks:
-      - emprestimoagora-network
+      - api-emprestimo-agora-network
     depends_on:
       - eventhub-simulator
     restart: unless-stopped
@@ -104,15 +104,15 @@ services:
 volumes:
   postgres_data:
     driver: local
-    name: emprestimoagora_postgres_data
+    name: api_emprestimo_agora_postgres_data
   
   azurite_data:
     driver: local
-    name: emprestimoagora_azurite_data
+    name: api_emprestimo_agora_azurite_data
   
   eventhub_data:
     driver: local
-    name: emprestimoagora_eventhub_data
+    name: api_emprestimo_agora_eventhub_data
   
 
 # =============================================================================
@@ -120,6 +120,6 @@ volumes:
 # Rede interna para comunicação entre containers
 # =============================================================================
 networks:
-  emprestimoagora-network:
+  api-emprestimo-agora-network:
     driver: bridge
-    name: emprestimoagora_network
+    name: api_emprestimo_agora_network

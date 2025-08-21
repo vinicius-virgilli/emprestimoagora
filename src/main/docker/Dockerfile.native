@@ -7,11 +7,11 @@
 #
 # Then, build the image with:
 #
-# docker build -f src/main/docker/Dockerfile.native -t quarkus/emprestimoagora .
+# docker build -f src/main/docker/Dockerfile.native -t quarkus/api-emprestimo-agora .
 #
 # Then run the container using:
 #
-# docker run -i --rm -p 8080:8080 quarkus/emprestimoagora
+# docker run -i --rm -p 8080:8080 quarkus/api-emprestimo-agora
 #
 # The ` registry.access.redhat.com/ubi8/ubi-minimal:8.10` base image is based on UBI 9.
 # To use UBI 8, switch to `quay.io/ubi8/ubi-minimal:8.10`.

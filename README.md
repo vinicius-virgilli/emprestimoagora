@@ -1,6 +1,6 @@
-# emprestimoagora
+# API Emprestimo Agora
 
-This project uses Quarkus, the Supersonic Subatomic Java Framework.
+API para simulação de empréstimos desenvolvida com Quarkus, the Supersonic Subatomic Java Framework.
 
 If you want to learn more about Quarkus, please visit its website: <https://quarkus.io/>.
 
@@ -49,7 +49,7 @@ Or, if you don't have GraalVM installed, you can run the native executable build
 ./mvnw package -Dnative -Dquarkus.native.container-build=true
 ```
 
-You can then execute your native executable with: `./target/emprestimoagora-1.0.0-SNAPSHOT-runner`
+You can then execute your native executable with: `./target/api-emprestimo-agora-1.0.0-SNAPSHOT-runner`
 
 If you want to learn more about building native executables, please consult <https://quarkus.io/guides/maven-tooling>.
 

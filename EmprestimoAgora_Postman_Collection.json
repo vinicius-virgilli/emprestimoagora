@@ -1,8 +1,8 @@
 {
 	"info": {
 		"_postman_id": "emprestimo-agora-api",
-		"name": "EmprestimoAgora API",
-		"description": "Coleção completa dos endpoints da API EmprestimoAgora para simulação de empréstimos, consulta de volume e telemetria.",
+		"name": "API Emprestimo Agora",
+		"description": "Coleção completa dos endpoints da API Emprestimo Agora para simulação de empréstimos, consulta de volume e telemetria.",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
 	"item": [
@@ -342,7 +342,7 @@
 		{
 			"key": "base_url",
 			"value": "http://localhost:8080",
-			"description": "URL base da API EmprestimoAgora"
+			"description": "URL base da API Emprestimo Agora"
 		}
 	]
 }

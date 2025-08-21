@@ -1,6 +1,6 @@
 {
   "info": {
-    "name": "Azurite Storage APIs - EmprestimoAgora",
+    "name": "Azurite Storage APIs - API Emprestimo Agora",
     "description": "Coleção para acessar as APIs do Azurite (Azure Storage Emulator) e visualizar mensagens do EventHub",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
     "version": "1.0.0"

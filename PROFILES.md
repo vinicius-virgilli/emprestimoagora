@@ -18,7 +18,7 @@ mvn quarkus:dev
 
 **Características:**
 - Banco de dados H2 com persistência em arquivo
-- Arquivo do banco: `./data/emprestimoagora_dev.mv.db`
+- Arquivo do banco: `./data/api_emprestimo_agora_dev.mv.db`
 - Não requer instalação de banco externo
 - Ideal para desenvolvimento local rápido
 - Dados são mantidos entre execuções
@@ -39,15 +39,15 @@ mvn quarkus:dev
 
 **Pré-requisitos:**
 - PostgreSQL instalado e rodando na porta 5432
-- Banco de dados `emprestimoagora_dev` criado
-- Usuário `emprestimoagora` com senha `dev123456`
+- Banco de dados `api_emprestimo_agora_dev` criado
+- Usuário `api_emprestimo_agora` com senha `dev123456`
 
 **Configuração do PostgreSQL:**
 ```sql
 -- Conectar como superusuário e executar:
-CREATE USER emprestimoagora WITH PASSWORD 'dev123456';
-CREATE DATABASE emprestimoagora_dev OWNER emprestimoagora;
-GRANT ALL PRIVILEGES ON DATABASE emprestimoagora_dev TO emprestimoagora;
+CREATE USER api_emprestimo_agora WITH PASSWORD 'dev123456';
+CREATE DATABASE api_emprestimo_agora_dev OWNER api_emprestimo_agora;
+GRANT ALL PRIVILEGES ON DATABASE api_emprestimo_agora_dev TO api_emprestimo_agora;
 ```
 
 **Características:**
@@ -72,9 +72,9 @@ quarkus.datasource.jdbc.url=jdbc:postgresql://localhost:5432/seu_banco
 ```
 
 **Credenciais atuais (alinhadas com docker-compose.yml):**
-- Usuário: `emprestimoagora`
+- Usuário: `api_emprestimo_agora`
 - Senha: `dev123456`
-- Banco: `emprestimoagora_dev`
+- Banco: `api_emprestimo_agora_dev`
 
 ## Docker Compose (Opcional)
 

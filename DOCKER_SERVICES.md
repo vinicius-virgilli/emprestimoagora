@@ -8,8 +8,8 @@ Este documento explica todos os serviços disponíveis no `docker-compose.yml` e
 **Banco de dados principal da aplicação**
 - **Imagem**: `postgres:15-alpine`
 - **Porta**: `5432`
-- **Database**: `emprestimoagora_dev`
-- **Usuário**: `emprestimoagora`
+- **Database**: `api_emprestimo_agora_dev`
+- **Usuário**: `api_emprestimo_agora`
 - **Senha**: `dev123456`
 - **Volume**: Dados persistem em `postgres_data`
 - **Health Check**: Verifica se o banco está respondendo
@@ -38,7 +38,7 @@ Este documento explica todos os serviços disponíveis no `docker-compose.yml` e
 **Interface web para administração do PostgreSQL**
 - **Imagem**: `dpage/pgadmin4:latest`
 - **Porta**: `8081`
-- **Email**: `admin@emprestimoagora.com`
+- **Email**: `admin@api-emprestimo-agora.com`
 - **Senha**: `admin123`
 - **Volume**: Configurações persistem em `pgadmin_data`
 - **Profiles**: `admin`, `dev`
@@ -124,8 +124,8 @@ docker-compose down -v --remove-orphans
 | Serviço | URL | Credenciais |
 |---------|-----|-------------|
 | **Aplicação** | http://localhost:8080 | - |
-| **PostgreSQL** | localhost:5432 | `emprestimoagora` / `dev123456` |
-| **PgAdmin** | http://localhost:8081 | `admin@emprestimoagora.com` / `admin123` |
+| **PostgreSQL** | localhost:5432 | `api_emprestimo_agora` / `dev123456` |
+| **PgAdmin** | http://localhost:8081 | `admin@api-emprestimo-agora.com` / `admin123` |
 | **Azurite Blob** | http://localhost:10000 | Account: `devstoreaccount1` |
 | **Azurite Queue** | http://localhost:10001 | Key: `Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==` |
 | **Azurite Table** | http://localhost:10002 | - |
@@ -136,18 +136,18 @@ docker-compose down -v --remove-orphans
 
 Todos os dados são armazenados em volumes Docker nomeados:
 
-- `emprestimoagora_postgres_data`: Dados do PostgreSQL
-- `emprestimoagora_azurite_data`: Dados do Azurite
-- `emprestimoagora_eventhub_data`: Dados do Event Hub
-- `emprestimoagora_pgadmin_data`: Configurações do PgAdmin
+- `api_emprestimo_agora_postgres_data`: Dados do PostgreSQL
+- `api_emprestimo_agora_azurite_data`: Dados do Azurite
+- `api_emprestimo_agora_eventhub_data`: Dados do Event Hub
+- `api_emprestimo_agora_pgadmin_data`: Configurações do PgAdmin
 
 ### Backup dos Volumes
 ```bash
 # Backup do PostgreSQL
-docker run --rm -v emprestimoagora_postgres_data:/data -v $(pwd):/backup alpine tar czf /backup/postgres_backup.tar.gz -C /data .
+docker run --rm -v api_emprestimo_agora_postgres_data:/data -v $(pwd):/backup alpine tar czf /backup/postgres_backup.tar.gz -C /data .
 
 # Restaurar backup
-docker run --rm -v emprestimoagora_postgres_data:/data -v $(pwd):/backup alpine tar xzf /backup/postgres_backup.tar.gz -C /data
+docker run --rm -v api_emprestimo_agora_postgres_data:/data -v $(pwd):/backup alpine tar xzf /backup/postgres_backup.tar.gz -C /data
 ```
 
 ## 🔧 Configuração da Aplicação
@@ -158,8 +158,8 @@ As configurações da aplicação para conectar aos serviços estão em:
 ### Strings de Conexão
 ```properties
 # PostgreSQL
-quarkus.datasource.jdbc.url=jdbc:postgresql://localhost:5432/emprestimoagora_dev
-quarkus.datasource.username=emprestimoagora
+quarkus.datasource.jdbc.url=jdbc:postgresql://localhost:5432/api_emprestimo_agora_dev
+quarkus.datasource.username=api_emprestimo_agora
 quarkus.datasource.password=dev123456
 
 # Event Hub
@@ -210,7 +210,7 @@ curl http://localhost:10000/devstoreaccount1
 ### Health Checks
 ```bash
 # PostgreSQL
-docker-compose exec postgres-dev pg_isready -U emprestimoagora -d emprestimoagora_dev
+docker-compose exec postgres-dev pg_isready -U api_emprestimo_agora -d api_emprestimo_agora_dev
 
 # Verificar conectividade de rede
 docker-compose exec postgres-dev ping eventhub-simulator

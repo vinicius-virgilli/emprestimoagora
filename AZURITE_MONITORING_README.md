@@ -149,7 +149,7 @@ curl -X POST http://localhost:8080/api/simulacao/processar \
 2. Confirme se as mensagens estão sendo enviadas pela aplicação
 3. Verifique os logs do container EventHub:
    ```bash
-   docker logs emprestimoagora-eventhub
+   docker logs api-emprestimo-agora-eventhub
    ```
 
 ## 🔗 URLs Úteis
@@ -158,7 +158,7 @@ curl -X POST http://localhost:8080/api/simulacao/processar \
 - **Azurite Queue Storage**: http://localhost:10001
 - **Azurite Table Storage**: http://localhost:10002
 - **Kafdrop (EventHub UI)**: http://localhost:9000
-- **API EmprestimoAgora**: http://localhost:8080
+- **API Emprestimo Agora**: http://localhost:8080
 
 ## 📚 Referências
 
