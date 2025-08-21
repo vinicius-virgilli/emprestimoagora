@@ -204,10 +204,13 @@ public class PersistenciaService {
         return new VolumeSimuladoDTO(
             ((Number) resultado[0]).intValue(), // codigoProduto
             (String) resultado[1], // descricaoProduto
-            convertToBigDecimal(resultado[2]), // taxaMediaJuro
+            convertToBigDecimal(resultado[2]), // taxaMediaJuros
             convertToBigDecimal(resultado[3]), // valorMedioPrestacao
             convertToBigDecimal(resultado[4]), // valorTotalDesejado
-            convertToBigDecimal(resultado[5])  // valorTotalCredito
+            convertToBigDecimal(resultado[5]), // valorMedioPrestacaoSAC
+            convertToBigDecimal(resultado[6]), // valorTotalCreditoSAC
+            convertToBigDecimal(resultado[7]), // valorMedioPrestacaoPRICE
+            convertToBigDecimal(resultado[8])  // valorTotalCreditoPRICE
         );
     }
     

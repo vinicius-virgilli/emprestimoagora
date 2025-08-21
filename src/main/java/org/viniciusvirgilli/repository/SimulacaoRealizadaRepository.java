@@ -72,10 +72,13 @@ public class SimulacaoRealizadaRepository implements PanacheRepository<Simulacao
         return getEntityManager().createQuery(
             "SELECT s.codigoProduto, " +
             "       s.descricaoProduto, " +
-            "       AVG(s.taxaJuros) as taxaMediaJuro, " +
+            "       AVG(s.taxaJuros) as taxaMediaJuros, " +
             "       AVG((s.valorTotalSAC + s.valorTotalPRICE) / 2 / s.prazoMeses) as valorMedioPrestacao, " +
             "       SUM(s.valorDesejado) as valorTotalDesejado, " +
-            "       SUM((s.valorTotalSAC + s.valorTotalPRICE) / 2) as valorTotalCredito " +
+            "       AVG(s.valorTotalSAC / s.prazoMeses) as valorMedioPrestacaoSAC, " +
+            "       SUM(s.valorTotalSAC) as valorTotalCreditoSAC, " +
+            "       AVG(s.valorTotalPRICE / s.prazoMeses) as valorMedioPrestacaoPRICE, " +
+            "       SUM(s.valorTotalPRICE) as valorTotalCreditoPRICE " +
             "FROM SimulacaoRealizada s " +
             "WHERE s.dataSimulacao >= :inicioDia AND s.dataSimulacao < :fimDia " +
             "GROUP BY s.codigoProduto, s.descricaoProduto " +
@@ -97,10 +100,13 @@ public class SimulacaoRealizadaRepository implements PanacheRepository<Simulacao
         return getEntityManager().createQuery(
             "SELECT s.codigoProduto, " +
             "       s.descricaoProduto, " +
-            "       AVG(s.taxaJuros) as taxaMediaJuro, " +
+            "       AVG(s.taxaJuros) as taxaMediaJuros, " +
             "       AVG((s.valorTotalSAC + s.valorTotalPRICE) / 2 / s.prazoMeses) as valorMedioPrestacao, " +
             "       SUM(s.valorDesejado) as valorTotalDesejado, " +
-            "       SUM((s.valorTotalSAC + s.valorTotalPRICE) / 2) as valorTotalCredito " +
+            "       AVG(s.valorTotalSAC / s.prazoMeses) as valorMedioPrestacaoSAC, " +
+            "       SUM(s.valorTotalSAC) as valorTotalCreditoSAC, " +
+            "       AVG(s.valorTotalPRICE / s.prazoMeses) as valorMedioPrestacaoPRICE, " +
+            "       SUM(s.valorTotalPRICE) as valorTotalCreditoPRICE " +
             "FROM SimulacaoRealizada s " +
             "WHERE s.dataSimulacao >= :inicioDateTime AND s.dataSimulacao < :fimDateTime " +
             "GROUP BY s.codigoProduto, s.descricaoProduto " +

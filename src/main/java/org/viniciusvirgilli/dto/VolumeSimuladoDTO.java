@@ -32,10 +32,10 @@ public class VolumeSimuladoDTO {
     /**
      * Taxa média de juros aplicada
      */
-    @JsonProperty("taxaMediaJuro")
+    @JsonProperty("taxaMediaJuros")
     @NotNull(message = "Taxa média de juros é obrigatória")
     @PositiveOrZero(message = "Taxa média de juros deve ser positiva ou zero")
-    private BigDecimal taxaMediaJuro;
+    private BigDecimal taxaMediaJuros;
 
     /**
      * Valor médio das prestações
@@ -54,12 +54,36 @@ public class VolumeSimuladoDTO {
     private BigDecimal valorTotalDesejado;
 
     /**
-     * Valor total de crédito disponibilizado
+     * Valor médio das prestações SAC
      */
-    @JsonProperty("valorTotalCredito")
-    @NotNull(message = "Valor total de crédito é obrigatório")
-    @PositiveOrZero(message = "Valor total de crédito deve ser positivo ou zero")
-    private BigDecimal valorTotalCredito;
+    @JsonProperty("valorMedioPrestacaoSAC")
+    @NotNull(message = "Valor médio da prestação SAC é obrigatório")
+    @PositiveOrZero(message = "Valor médio da prestação SAC deve ser positivo ou zero")
+    private BigDecimal valorMedioPrestacaoSAC;
+
+    /**
+     * Valor total de crédito SAC
+     */
+    @JsonProperty("valorTotalCreditoSAC")
+    @NotNull(message = "Valor total de crédito SAC é obrigatório")
+    @PositiveOrZero(message = "Valor total de crédito SAC deve ser positivo ou zero")
+    private BigDecimal valorTotalCreditoSAC;
+
+    /**
+     * Valor médio das prestações PRICE
+     */
+    @JsonProperty("valorMedioPrestacaoPRICE")
+    @NotNull(message = "Valor médio da prestação PRICE é obrigatório")
+    @PositiveOrZero(message = "Valor médio da prestação PRICE deve ser positivo ou zero")
+    private BigDecimal valorMedioPrestacaoPRICE;
+
+    /**
+     * Valor total de crédito PRICE
+     */
+    @JsonProperty("valorTotalCreditoPRICE")
+    @NotNull(message = "Valor total de crédito PRICE é obrigatório")
+    @PositiveOrZero(message = "Valor total de crédito PRICE deve ser positivo ou zero")
+    private BigDecimal valorTotalCreditoPRICE;
 
     /**
      * Construtor padrão
@@ -70,14 +94,19 @@ public class VolumeSimuladoDTO {
     /**
      * Construtor completo
      */
-    public VolumeSimuladoDTO(Integer codigoProduto, String descricaoProduto, BigDecimal taxaMediaJuro,
-                            BigDecimal valorMedioPrestacao, BigDecimal valorTotalDesejado, BigDecimal valorTotalCredito) {
+    public VolumeSimuladoDTO(Integer codigoProduto, String descricaoProduto, BigDecimal taxaMediaJuros,
+                            BigDecimal valorMedioPrestacao, BigDecimal valorTotalDesejado, 
+                            BigDecimal valorMedioPrestacaoSAC, BigDecimal valorTotalCreditoSAC,
+                            BigDecimal valorMedioPrestacaoPRICE, BigDecimal valorTotalCreditoPRICE) {
         this.codigoProduto = codigoProduto;
         this.descricaoProduto = descricaoProduto;
-        this.taxaMediaJuro = taxaMediaJuro;
+        this.taxaMediaJuros = taxaMediaJuros;
         this.valorMedioPrestacao = valorMedioPrestacao;
         this.valorTotalDesejado = valorTotalDesejado;
-        this.valorTotalCredito = valorTotalCredito;
+        this.valorMedioPrestacaoSAC = valorMedioPrestacaoSAC;
+        this.valorTotalCreditoSAC = valorTotalCreditoSAC;
+        this.valorMedioPrestacaoPRICE = valorMedioPrestacaoPRICE;
+        this.valorTotalCreditoPRICE = valorTotalCreditoPRICE;
     }
 
     // Getters e Setters
@@ -97,12 +126,12 @@ public class VolumeSimuladoDTO {
         this.descricaoProduto = descricaoProduto;
     }
 
-    public BigDecimal getTaxaMediaJuro() {
-        return taxaMediaJuro;
+    public BigDecimal getTaxaMediaJuros() {
+        return taxaMediaJuros;
     }
 
-    public void setTaxaMediaJuro(BigDecimal taxaMediaJuro) {
-        this.taxaMediaJuro = taxaMediaJuro;
+    public void setTaxaMediaJuros(BigDecimal taxaMediaJuros) {
+        this.taxaMediaJuros = taxaMediaJuros;
     }
 
     public BigDecimal getValorMedioPrestacao() {
@@ -121,12 +150,36 @@ public class VolumeSimuladoDTO {
         this.valorTotalDesejado = valorTotalDesejado;
     }
 
-    public BigDecimal getValorTotalCredito() {
-        return valorTotalCredito;
+    public BigDecimal getValorMedioPrestacaoSAC() {
+        return valorMedioPrestacaoSAC;
     }
 
-    public void setValorTotalCredito(BigDecimal valorTotalCredito) {
-        this.valorTotalCredito = valorTotalCredito;
+    public void setValorMedioPrestacaoSAC(BigDecimal valorMedioPrestacaoSAC) {
+        this.valorMedioPrestacaoSAC = valorMedioPrestacaoSAC;
+    }
+
+    public BigDecimal getValorTotalCreditoSAC() {
+        return valorTotalCreditoSAC;
+    }
+
+    public void setValorTotalCreditoSAC(BigDecimal valorTotalCreditoSAC) {
+        this.valorTotalCreditoSAC = valorTotalCreditoSAC;
+    }
+
+    public BigDecimal getValorMedioPrestacaoPRICE() {
+        return valorMedioPrestacaoPRICE;
+    }
+
+    public void setValorMedioPrestacaoPRICE(BigDecimal valorMedioPrestacaoPRICE) {
+        this.valorMedioPrestacaoPRICE = valorMedioPrestacaoPRICE;
+    }
+
+    public BigDecimal getValorTotalCreditoPRICE() {
+        return valorTotalCreditoPRICE;
+    }
+
+    public void setValorTotalCreditoPRICE(BigDecimal valorTotalCreditoPRICE) {
+        this.valorTotalCreditoPRICE = valorTotalCreditoPRICE;
     }
 
     @Override
@@ -134,10 +187,13 @@ public class VolumeSimuladoDTO {
         return "VolumeSimuladoDTO{" +
                 "codigoProduto=" + codigoProduto +
                 ", descricaoProduto='" + descricaoProduto + '\'' +
-                ", taxaMediaJuro=" + taxaMediaJuro +
+                ", taxaMediaJuros=" + taxaMediaJuros +
                 ", valorMedioPrestacao=" + valorMedioPrestacao +
                 ", valorTotalDesejado=" + valorTotalDesejado +
-                ", valorTotalCredito=" + valorTotalCredito +
+                ", valorMedioPrestacaoSAC=" + valorMedioPrestacaoSAC +
+                ", valorTotalCreditoSAC=" + valorTotalCreditoSAC +
+                ", valorMedioPrestacaoPRICE=" + valorMedioPrestacaoPRICE +
+                ", valorTotalCreditoPRICE=" + valorTotalCreditoPRICE +
                 '}';
     }
 }
