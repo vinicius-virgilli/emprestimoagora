@@ -172,7 +172,8 @@ public class PersistenciaService {
             simulacao.getIdSimulacao(),
             simulacao.getValorDesejado(),
             simulacao.getPrazoMeses(),
-            simulacao.getValorTotalSAC() // Usando SAC como padrão para o resumo
+            simulacao.getValorTotalSAC(),
+            simulacao.getValorTotalPRICE()
         );
     }
 

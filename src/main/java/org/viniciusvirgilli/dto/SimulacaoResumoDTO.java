@@ -37,12 +37,21 @@ public class SimulacaoResumoDTO {
     private Short prazo;
 
     /**
-     * Valor total das parcelas
+     * Valor total das parcelas SAC
      */
-    @JsonProperty("valorTotalParcelas")
-    @NotNull(message = "Valor total das parcelas é obrigatório")
-    @PositiveOrZero(message = "Valor total das parcelas deve ser positivo ou zero")
-    private BigDecimal valorTotalParcelas;
+    @JsonProperty("valorTotalParcelasSAC")
+    @NotNull(message = "Valor total das parcelas SAC é obrigatório")
+    @PositiveOrZero(message = "Valor total das parcelas SAC deve ser positivo ou zero")
+    private BigDecimal valorTotalParcelasSAC;
+
+    /**
+     * Valor total das parcelas PRICE
+     */
+    @JsonProperty("valorTotalParcelasPRICE")
+    @NotNull(message = "Valor total das parcelas PRICE é obrigatório")
+    @PositiveOrZero(message = "Valor total das parcelas PRICE deve ser positivo ou zero")
+    private BigDecimal valorTotalParcelasPRICE;
+
 
     /**
      * Construtor padrão
@@ -53,11 +62,13 @@ public class SimulacaoResumoDTO {
     /**
      * Construtor completo
      */
-    public SimulacaoResumoDTO(Long idSimulacao, BigDecimal valorDesejado, Short prazo, BigDecimal valorTotalParcelas) {
+    public SimulacaoResumoDTO(Long idSimulacao, BigDecimal valorDesejado, Short prazo, 
+                             BigDecimal valorTotalParcelasSAC, BigDecimal valorTotalParcelasPRICE) {
         this.idSimulacao = idSimulacao;
         this.valorDesejado = valorDesejado;
         this.prazo = prazo;
-        this.valorTotalParcelas = valorTotalParcelas;
+        this.valorTotalParcelasSAC = valorTotalParcelasSAC;
+        this.valorTotalParcelasPRICE = valorTotalParcelasPRICE;
     }
 
     // Getters e Setters
@@ -85,12 +96,20 @@ public class SimulacaoResumoDTO {
         this.prazo = prazo;
     }
 
-    public BigDecimal getValorTotalParcelas() {
-        return valorTotalParcelas;
+    public BigDecimal getValorTotalParcelasSAC() {
+        return valorTotalParcelasSAC;
     }
 
-    public void setValorTotalParcelas(BigDecimal valorTotalParcelas) {
-        this.valorTotalParcelas = valorTotalParcelas;
+    public void setValorTotalParcelasSAC(BigDecimal valorTotalParcelasSAC) {
+        this.valorTotalParcelasSAC = valorTotalParcelasSAC;
+    }
+
+    public BigDecimal getValorTotalParcelasPRICE() {
+        return valorTotalParcelasPRICE;
+    }
+
+    public void setValorTotalParcelasPRICE(BigDecimal valorTotalParcelasPRICE) {
+        this.valorTotalParcelasPRICE = valorTotalParcelasPRICE;
     }
 
     @Override
@@ -99,7 +118,8 @@ public class SimulacaoResumoDTO {
                 "idSimulacao=" + idSimulacao +
                 ", valorDesejado=" + valorDesejado +
                 ", prazo=" + prazo +
-                ", valorTotalParcelas=" + valorTotalParcelas +
+                ", valorTotalParcelasSAC=" + valorTotalParcelasSAC +
+                ", valorTotalParcelasPRICE=" + valorTotalParcelasPRICE +
                 '}';
     }
 }
