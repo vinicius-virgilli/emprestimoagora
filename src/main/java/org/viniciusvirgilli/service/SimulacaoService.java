@@ -120,20 +120,17 @@ public class SimulacaoService {
     /**
      * Calcula as parcelas usando o sistema SAC (Sistema de Amortização Constante)
      */
-    private List<ParcelaDTO> calcularSAC(BigDecimal valorEmprestimo, BigDecimal taxaJurosAnual, Short prazoMeses) {
+    private List<ParcelaDTO> calcularSAC(BigDecimal valorEmprestimo, BigDecimal taxaJurosMensal, Short prazoMeses) {
         List<ParcelaDTO> parcelas = new ArrayList<>();
         
-        // Converter taxa anual para mensal
-        BigDecimal taxaMensal = taxaJurosAnual.divide(BigDecimal.valueOf(12), 10, RoundingMode.HALF_UP);
-        
         // Amortização constante
-        BigDecimal amortizacao = valorEmprestimo.divide(BigDecimal.valueOf(prazoMeses), 2, RoundingMode.HALF_UP);
+        BigDecimal amortizacao = valorEmprestimo.divide(BigDecimal.valueOf(prazoMeses), 9, RoundingMode.HALF_UP);
         
         BigDecimal saldoDevedor = valorEmprestimo;
         
         for (int i = 1; i <= prazoMeses; i++) {
             // Juros sobre o saldo devedor
-            BigDecimal juros = saldoDevedor.multiply(taxaMensal).divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
+            BigDecimal juros = saldoDevedor.multiply(taxaJurosMensal).setScale( 9, RoundingMode.HALF_UP);
             
             // Prestação = Amortização + Juros
             BigDecimal prestacao = amortizacao.add(juros);
@@ -150,28 +147,24 @@ public class SimulacaoService {
     /**
      * Calcula as parcelas usando o sistema PRICE (Sistema Francês)
      */
-    private List<ParcelaDTO> calcularPRICE(BigDecimal valorEmprestimo, BigDecimal taxaJurosAnual, Short prazoMeses) {
+    private List<ParcelaDTO> calcularPRICE(BigDecimal valorEmprestimo, BigDecimal taxaJurosMensal, Short prazoMeses) {
         List<ParcelaDTO> parcelas = new ArrayList<>();
         
-        // Converter taxa anual para mensal
-        BigDecimal taxaMensal = taxaJurosAnual.divide(BigDecimal.valueOf(12), 10, RoundingMode.HALF_UP)
-            .divide(BigDecimal.valueOf(100), 10, RoundingMode.HALF_UP);
-        
         // Calcular prestação fixa usando fórmula PRICE
-        BigDecimal umMaisTaxa = BigDecimal.ONE.add(taxaMensal);
+        BigDecimal umMaisTaxa = BigDecimal.ONE.add(taxaJurosMensal);
         BigDecimal potencia = umMaisTaxa.pow(prazoMeses);
-        BigDecimal coeficiente = taxaMensal.multiply(potencia)
+        BigDecimal coeficiente = taxaJurosMensal.multiply(potencia)
             .divide(potencia.subtract(BigDecimal.ONE), 10, RoundingMode.HALF_UP);
         
         BigDecimal prestacaoFixa = valorEmprestimo.multiply(coeficiente)
-            .setScale(2, RoundingMode.HALF_UP);
+            .setScale(9, RoundingMode.HALF_UP);
         
         BigDecimal saldoDevedor = valorEmprestimo;
         
         for (int i = 1; i <= prazoMeses; i++) {
             // Juros sobre o saldo devedor
-            BigDecimal juros = saldoDevedor.multiply(taxaMensal)
-                .setScale(2, RoundingMode.HALF_UP);
+            BigDecimal juros = saldoDevedor.multiply(taxaJurosMensal)
+                .setScale(9, RoundingMode.HALF_UP);
             
             // Amortização = Prestação - Juros
             BigDecimal amortizacao = prestacaoFixa.subtract(juros);
