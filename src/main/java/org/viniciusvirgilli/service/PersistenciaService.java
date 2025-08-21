@@ -121,6 +121,26 @@ public class PersistenciaService {
     }
 
     /**
+     * Busca volume por período
+     */
+    public VolumePeriodoResponseDTO buscarVolumePorPeriodo(LocalDate dataInicio, LocalDate dataFim) {
+        try {
+            List<Object[]> resultados = simulacaoRepository
+                .findVolumePorProdutoPorPeriodo(dataInicio, dataFim);
+            
+            List<VolumeSimuladoDTO> volumes = resultados.stream()
+                .map(this::converterParaVolumeSimulado)
+                .toList();
+            
+            return new VolumePeriodoResponseDTO(dataInicio, dataFim, volumes);
+            
+        } catch (Exception e) {
+            LOGGER.severe("Erro ao buscar volume por período: " + e.getMessage());
+            throw new RuntimeException("Erro ao buscar volume por período", e);
+        }
+    }
+
+    /**
      * Busca dados de telemetria das simulações
      */
     public TelemetriaResponseDTO buscarTelemetria(LocalDate dataReferencia) {
@@ -184,11 +204,24 @@ public class PersistenciaService {
         return new VolumeSimuladoDTO(
             ((Number) resultado[0]).intValue(), // codigoProduto
             (String) resultado[1], // descricaoProduto
-            (java.math.BigDecimal) resultado[2], // taxaMediaJuro
-            (java.math.BigDecimal) resultado[3], // valorMedioPrestacao
-            (java.math.BigDecimal) resultado[4], // valorTotalDesejado
-            (java.math.BigDecimal) resultado[5]  // valorTotalCredito
+            convertToBigDecimal(resultado[2]), // taxaMediaJuro
+            convertToBigDecimal(resultado[3]), // valorMedioPrestacao
+            convertToBigDecimal(resultado[4]), // valorTotalDesejado
+            convertToBigDecimal(resultado[5])  // valorTotalCredito
         );
+    }
+    
+    private BigDecimal convertToBigDecimal(Object value) {
+        if (value == null) {
+            return BigDecimal.ZERO;
+        }
+        if (value instanceof BigDecimal) {
+            return (BigDecimal) value;
+        }
+        if (value instanceof Number) {
+            return BigDecimal.valueOf(((Number) value).doubleValue());
+        }
+        return BigDecimal.ZERO;
     }
 
     /**

@@ -88,6 +88,31 @@ public class SimulacaoRealizadaRepository implements PanacheRepository<Simulacao
     }
 
     /**
+     * Busca volume simulado por produto por período
+     */
+    public List<Object[]> findVolumePorProdutoPorPeriodo(LocalDate dataInicio, LocalDate dataFim) {
+        LocalDateTime inicioDateTime = dataInicio.atStartOfDay();
+        LocalDateTime fimDateTime = dataFim.plusDays(1).atStartOfDay();
+        
+        return getEntityManager().createQuery(
+            "SELECT s.codigoProduto, " +
+            "       s.descricaoProduto, " +
+            "       AVG(s.taxaJuros) as taxaMediaJuro, " +
+            "       AVG((s.valorTotalSAC + s.valorTotalPRICE) / 2 / s.prazoMeses) as valorMedioPrestacao, " +
+            "       SUM(s.valorDesejado) as valorTotalDesejado, " +
+            "       SUM((s.valorTotalSAC + s.valorTotalPRICE) / 2) as valorTotalCredito " +
+            "FROM SimulacaoRealizada s " +
+            "WHERE s.dataSimulacao >= :inicioDateTime AND s.dataSimulacao < :fimDateTime " +
+            "GROUP BY s.codigoProduto, s.descricaoProduto " +
+            "ORDER BY s.codigoProduto",
+            Object[].class
+        )
+        .setParameter("inicioDateTime", inicioDateTime)
+        .setParameter("fimDateTime", fimDateTime)
+        .getResultList();
+    }
+
+    /**
      * Busca estatísticas para telemetria por dia
      */
     public Object[] findEstatisticasPorDia(LocalDate dataReferencia) {

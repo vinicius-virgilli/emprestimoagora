@@ -12,6 +12,7 @@ import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponses;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 import org.viniciusvirgilli.dto.VolumeDiarioResponseDTO;
+import org.viniciusvirgilli.dto.VolumePeriodoResponseDTO;
 import org.viniciusvirgilli.service.PersistenciaService;
 
 import java.time.LocalDate;
@@ -200,9 +201,8 @@ public class VolumeController {
             
             LOGGER.info(String.format("Consultando volume por período: %s a %s", dataInicio, dataFim));
             
-            // TODO: Implementar consulta por período
-            // Por enquanto, retornar dados do último dia do período
-            VolumeDiarioResponseDTO resultado = persistenciaService.buscarVolumeDiario(dataFim);
+            // Consulta por período agregado
+            VolumePeriodoResponseDTO resultado = persistenciaService.buscarVolumePorPeriodo(dataInicio, dataFim);
             
             LOGGER.info(String.format("Volume do período encontrado: %d produtos", 
                 resultado.getSimulacoes().size()));
