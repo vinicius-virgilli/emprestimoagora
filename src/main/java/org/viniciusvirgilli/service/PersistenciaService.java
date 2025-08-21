@@ -158,11 +158,11 @@ public class PersistenciaService {
                 stats = new Object[]{0L, 1.5, 0.8, 3.2, 100.0};
             }
             
-            // Converter com segurança
+            // Converter com segurança (valores vêm em segundos, converter para milissegundos)
             int qtdRequisicoes = stats[0] != null ? ((Number) stats[0]).intValue() : 0;
-            int tempoMedio = stats[1] != null ? ((Number) stats[1]).intValue() : 1500; // 1.5s em ms
-            int tempoMinimo = stats[2] != null ? ((Number) stats[2]).intValue() : 800; // 0.8s em ms
-            int tempoMaximo = stats[3] != null ? ((Number) stats[3]).intValue() : 3200; // 3.2s em ms
+            int tempoMedio = stats[1] != null ? (int)(((Number) stats[1]).doubleValue() * 1000) : 1500; // converter s para ms
+            int tempoMinimo = stats[2] != null ? (int)(((Number) stats[2]).doubleValue() * 1000) : 800; // converter s para ms
+            int tempoMaximo = stats[3] != null ? (int)(((Number) stats[3]).doubleValue() * 1000) : 3200; // converter s para ms
             
             LOGGER.info(String.format("Valores convertidos: qtd=%d, medio=%d, min=%d, max=%d", 
                 qtdRequisicoes, tempoMedio, tempoMinimo, tempoMaximo));

@@ -15,6 +15,7 @@ import org.viniciusvirgilli.dto.TelemetriaResponseDTO;
 import org.viniciusvirgilli.dto.TelemetriaEndpointDTO;
 import org.viniciusvirgilli.service.PersistenciaService;
 import org.viniciusvirgilli.service.EventHubService;
+import org.viniciusvirgilli.service.MetricasService;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -39,6 +40,9 @@ public class TelemetriaController {
 
     @Inject
     EventHubService eventHubService;
+
+    @Inject
+    MetricasService metricasService;
 
     /**
      * Endpoint para consultar dados de telemetria geral
@@ -70,9 +74,16 @@ public class TelemetriaController {
             
             LOGGER.info("Iniciando consulta de telemetria geral");
             
-            // Buscar dados de telemetria
-            TelemetriaResponseDTO telemetria = persistenciaService.buscarTelemetria(LocalDate.now());
-            LOGGER.info("Dados de telemetria obtidos com sucesso");
+            // Buscar dados de telemetria reais do Micrometer
+            TelemetriaResponseDTO telemetria;
+            if (metricasService.temMetricasDisponiveis()) {
+                telemetria = metricasService.coletarMetricas();
+                LOGGER.info("Dados de telemetria reais obtidos do Micrometer");
+            } else {
+                // Fallback para dados simulados se não houver métricas reais
+                telemetria = persistenciaService.buscarTelemetria(LocalDate.now());
+                LOGGER.info("Dados de telemetria simulados obtidos (fallback)");
+            }
             
             // Adicionar estatísticas do Event Hub
             try {
@@ -269,6 +280,52 @@ public class TelemetriaController {
     }
 
     /**
+     * Endpoint para zerar as métricas de telemetria
+     */
+    @DELETE
+    @Path("/metricas")
+    @Operation(
+        summary = "Zerar métricas de telemetria",
+        description = "Remove todas as simulações antigas para zerar as métricas de telemetria"
+    )
+    @APIResponse(
+        responseCode = "200",
+        description = "Métricas zeradas com sucesso"
+    )
+    @APIResponse(
+        responseCode = "500",
+        description = "Erro interno do servidor"
+    )
+    public Response zerarMetricas() {
+        try {
+            LOGGER.info("Iniciando processo de zeragem de métricas");
+            
+            // Limpar simulações antigas (todas até agora)
+            int registrosRemovidos = persistenciaService.limparSimulacoesAntigas(LocalDateTime.now());
+            
+            // Zerar métricas do Micrometer
+            metricasService.zerarMetricas();
+            
+            LOGGER.info(String.format("Métricas zeradas com sucesso. %d registros removidos.", registrosRemovidos));
+            
+            ZerarMetricasResponse response = new ZerarMetricasResponse(
+                "SUCCESS", 
+                "Métricas zeradas com sucesso", 
+                registrosRemovidos,
+                LocalDateTime.now().format(DATETIME_FORMATTER)
+            );
+            
+            return Response.ok(response).build();
+            
+        } catch (Exception e) {
+            LOGGER.severe("Erro ao zerar métricas: " + e.getMessage());
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                .entity(new ErrorResponse("CLEAR_METRICS_ERROR", "Erro ao zerar métricas de telemetria"))
+                .build();
+        }
+    }
+
+    /**
      * Classe para resposta de erro
      */
     public static class ErrorResponse {
@@ -314,5 +371,24 @@ public class TelemetriaController {
         public long eventHubErros;
 
         public PerformanceResponse() {}
+    }
+
+    /**
+     * Classe para resposta de zeragem de métricas
+     */
+    public static class ZerarMetricasResponse {
+        public String status;
+        public String mensagem;
+        public int registrosRemovidos;
+        public String dataHoraExecucao;
+
+        public ZerarMetricasResponse() {}
+
+        public ZerarMetricasResponse(String status, String mensagem, int registrosRemovidos, String dataHoraExecucao) {
+            this.status = status;
+            this.mensagem = mensagem;
+            this.registrosRemovidos = registrosRemovidos;
+            this.dataHoraExecucao = dataHoraExecucao;
+        }
     }
 }

@@ -139,7 +139,7 @@ public class SimulacaoRealizadaRepository implements PanacheRepository<Simulacao
         .setParameter("fimDia", fimDia)
         .getResultList();
         
-        return resultado.isEmpty() ? new Object[]{0, 0.0, 0.0, 0.0, 100.0} : resultado.get(0);
+        return resultado.isEmpty() ? new Object[]{0, 1.5, 0.8, 3.2, 100.0} : resultado.get(0);
     }
 
     /**

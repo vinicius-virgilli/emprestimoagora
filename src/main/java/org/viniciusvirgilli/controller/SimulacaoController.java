@@ -15,8 +15,12 @@ import org.viniciusvirgilli.dto.SimulacaoResponseDTO;
 import org.viniciusvirgilli.service.SimulacaoService;
 import org.viniciusvirgilli.service.EventHubService;
 import org.viniciusvirgilli.service.PersistenciaService;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Timer;
+import io.micrometer.core.instrument.Counter;
 
 import java.util.logging.Logger;
+import java.time.Duration;
 
 /**
  * Controller REST para operações de simulação de empréstimo
@@ -37,6 +41,40 @@ public class SimulacaoController {
 
     @Inject
     PersistenciaService persistenciaService;
+
+    @Inject
+    MeterRegistry meterRegistry;
+
+    // Métricas do endpoint de simulação
+    private Timer simulacaoTimer;
+    private Counter simulacaoRequestCounter;
+    private Counter simulacaoSuccessCounter;
+    private Counter simulacaoErrorCounter;
+
+    @jakarta.annotation.PostConstruct
+    public void initMetrics() {
+        simulacaoTimer = Timer.builder("simulacao.processar.duration")
+                .description("Tempo de resposta do endpoint POST /api/simulacao/processar")
+                .tag("endpoint", "POST /api/simulacao/processar")
+                .register(meterRegistry);
+
+        simulacaoRequestCounter = Counter.builder("simulacao.processar.requests.total")
+                .description("Número total de requisições ao endpoint POST /api/simulacao/processar")
+                .tag("endpoint", "POST /api/simulacao/processar")
+                .register(meterRegistry);
+
+        simulacaoSuccessCounter = Counter.builder("simulacao.processar.requests.success")
+                .description("Número de requisições bem-sucedidas ao endpoint POST /api/simulacao/processar")
+                .tag("endpoint", "POST /api/simulacao/processar")
+                .tag("status", "success")
+                .register(meterRegistry);
+
+        simulacaoErrorCounter = Counter.builder("simulacao.processar.requests.error")
+                .description("Número de requisições com erro ao endpoint POST /api/simulacao/processar")
+                .tag("endpoint", "POST /api/simulacao/processar")
+                .tag("status", "error")
+                .register(meterRegistry);
+    }
 
     /**
      * Endpoint principal para processar simulação de empréstimo
@@ -71,6 +109,12 @@ public class SimulacaoController {
         description = "Erro interno do servidor"
     )
     public Response processarSimulacao(@Valid SimulacaoRequestDTO request) {
+        // Incrementar contador de requisições totais
+        simulacaoRequestCounter.increment();
+        
+        // Medir tempo de resposta
+        Timer.Sample sample = Timer.start(meterRegistry);
+        
         try {
             LOGGER.info("Iniciando processamento de simulação: " + request.toString());
             
@@ -78,7 +122,7 @@ public class SimulacaoController {
             SimulacaoResponseDTO response = simulacaoService.processarSimulacao(request);
             
             LOGGER.info("Simulação processada com sucesso. ID: " + response.getIdSimulacao());
-            
+
             // 2. Enviar para Event Hub (assíncrono)
             try {
                 eventHubService.enviarEventoSimulacao(response);
@@ -97,16 +141,36 @@ public class SimulacaoController {
                 // Não falha a operação se a persistência falhar
             }
             
+            // Incrementar contador de sucesso
+            simulacaoSuccessCounter.increment();
+            
+            // Registrar tempo de resposta para requisições bem-sucedidas
+            sample.stop(simulacaoTimer);
+            
             return Response.ok(response).build();
             
         } catch (IllegalArgumentException e) {
             LOGGER.warning("Erro de validação: " + e.getMessage());
+            
+            // Incrementar contador de erro
+            simulacaoErrorCounter.increment();
+            
+            // Registrar tempo de resposta para requisições com erro
+            sample.stop(simulacaoTimer);
+            
             return Response.status(Response.Status.BAD_REQUEST)
                 .entity(new ErrorResponse("VALIDATION_ERROR", e.getMessage()))
                 .build();
                 
         } catch (Exception e) {
             LOGGER.severe("Erro interno ao processar simulação: " + e.getMessage());
+            
+            // Incrementar contador de erro
+            simulacaoErrorCounter.increment();
+            
+            // Registrar tempo de resposta para requisições com erro
+            sample.stop(simulacaoTimer);
+            
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
                 .entity(new ErrorResponse("INTERNAL_ERROR", "Erro interno do servidor"))
                 .build();
