@@ -1,0 +1,38 @@
+[
+  {
+    "codigoProduto": 1,
+    "nomeProduto": "Empréstimo Pessoal Básico",
+    "percentualTaxaJuros": 0.017900000,
+    "numeroMinimoMeses": 0,
+    "numeroMaximoMeses": 24,
+    "valorMinimo": 200.00,
+    "valorMaximo": 10000.00
+  },
+  {
+    "codigoProduto": 2,
+    "nomeProduto": "Empréstimo Pessoal Intermediário",
+    "percentualTaxaJuros": 0.017500000,
+    "numeroMinimoMeses": 25,
+    "numeroMaximoMeses": 48,
+    "valorMinimo": 10001.00,
+    "valorMaximo": 100000.00
+  },
+  {
+    "codigoProduto": 3,
+    "nomeProduto": "Empréstimo Pessoal Premium",
+    "percentualTaxaJuros": 0.018200000,
+    "numeroMinimoMeses": 49,
+    "numeroMaximoMeses": 96,
+    "valorMinimo": 100000.01,
+    "valorMaximo": 1000000.00
+  },
+  {
+    "codigoProduto": 4,
+    "nomeProduto": "Empréstimo Empresarial",
+    "percentualTaxaJuros": 0.015100000,
+    "numeroMinimoMeses": 96,
+    "numeroMaximoMeses": null,
+    "valorMinimo": 1000000.01,
+    "valorMaximo": 10000000.00
+  }
+]

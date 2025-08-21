@@ -92,6 +92,7 @@
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-cache</artifactId>
         </dependency>
+
         <dependency>
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-junit5</artifactId>
