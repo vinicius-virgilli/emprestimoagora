@@ -67,28 +67,32 @@ public class VolumeController {
     })
     public Response consultarVolumeDiario(
             @Parameter(
-                description = "Data de referência no formato yyyy-MM-dd", 
-                example = "2024-01-15"
+                description = "Data de referência no formato yyyy-MM-dd (obrigatório)", 
+                example = "2024-01-15",
+                required = true
             )
             @QueryParam("dataReferencia") String dataReferenciaStr) {
         
         try {
-            // Definir data de referência (padrão: hoje)
-            LocalDate dataReferencia;
+            // Validar se o parâmetro foi fornecido
             if (dataReferenciaStr == null || dataReferenciaStr.trim().isEmpty()) {
-                dataReferencia = LocalDate.now();
-                LOGGER.info("Usando data atual como referência: " + dataReferencia);
-            } else {
-                try {
-                    dataReferencia = LocalDate.parse(dataReferenciaStr, DATE_FORMATTER);
-                    LOGGER.info("Usando data informada como referência: " + dataReferencia);
-                } catch (DateTimeParseException e) {
-                    LOGGER.warning("Data inválida fornecida: " + dataReferenciaStr);
-                    return Response.status(Response.Status.BAD_REQUEST)
-                        .entity(new ErrorResponse("INVALID_DATE", 
-                            "Data deve estar no formato yyyy-MM-dd. Exemplo: 2024-01-15"))
-                        .build();
-                }
+                return Response.status(Response.Status.BAD_REQUEST)
+                    .entity(new ErrorResponse("MISSING_PARAMETER", 
+                        "O parâmetro dataReferencia é obrigatório. Use o formato yyyy-MM-dd"))
+                    .build();
+            }
+            
+            // Converter e validar a data
+            LocalDate dataReferencia;
+            try {
+                dataReferencia = LocalDate.parse(dataReferenciaStr, DATE_FORMATTER);
+                LOGGER.info("Usando data informada como referência: " + dataReferencia);
+            } catch (DateTimeParseException e) {
+                LOGGER.warning("Data inválida fornecida: " + dataReferenciaStr);
+                return Response.status(Response.Status.BAD_REQUEST)
+                    .entity(new ErrorResponse("INVALID_DATE", 
+                        "Data deve estar no formato yyyy-MM-dd. Exemplo: 2024-01-15"))
+                    .build();
             }
             
             // Validar se a data não é futura
