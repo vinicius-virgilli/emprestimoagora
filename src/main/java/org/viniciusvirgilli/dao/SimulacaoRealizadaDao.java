@@ -2,8 +2,9 @@ package org.viniciusvirgilli.dao;
 
 
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
+import io.quarkus.hibernate.orm.PersistenceUnit;
 import org.viniciusvirgilli.model.local.SimulacaoRealizada;
 
 import java.time.LocalDate;
@@ -14,7 +15,8 @@ import java.util.Optional;
 @ApplicationScoped
 public class SimulacaoRealizadaDao {
 
-    @PersistenceContext(name = "local")
+    @Inject
+    @PersistenceUnit("local")
     EntityManager local;
 
     // Métodos básicos de persistência
