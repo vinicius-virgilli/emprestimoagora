@@ -4,16 +4,15 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import org.viniciusvirgilli.dto.*;
-import org.viniciusvirgilli.entity.Produto;
+import org.viniciusvirgilli.model.Produto;
 import org.viniciusvirgilli.enums.TipoSimulacao;
-import org.viniciusvirgilli.repository.ProdutoRepository;
+import org.viniciusvirgilli.dao.ProdutoDao;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 
 /**
  * Serviço responsável pela lógica de negócio das simulações de empréstimo
@@ -22,7 +21,7 @@ import java.util.UUID;
 public class SimulacaoService {
 
     @Inject
-    ProdutoRepository produtoRepository;
+    ProdutoDao produtoDao;
     
     @Inject
     CacheService cacheService;
@@ -190,20 +189,20 @@ public class SimulacaoService {
      * Busca produto por código
      */
     public Optional<Produto> buscarProdutoPorCodigo(Integer codigoProduto) {
-        return produtoRepository.findByCodigoProduto(codigoProduto);
+        return produtoDao.findByCodigoProduto(codigoProduto);
     }
 
     /**
      * Lista todos os produtos disponíveis
      */
     public List<Produto> listarTodosProdutos() {
-        return produtoRepository.listAll();
+        return produtoDao.listAll();
     }
 
     /**
      * Busca produtos por faixa de valor
      */
     public List<Produto> buscarProdutosPorFaixaValor(BigDecimal valorMinimo, BigDecimal valorMaximo) {
-        return produtoRepository.findByFaixaValor(valorMinimo, valorMaximo);
+        return produtoDao.findByFaixaValor(valorMinimo, valorMaximo);
     }
 }

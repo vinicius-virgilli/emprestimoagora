@@ -4,12 +4,10 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import org.viniciusvirgilli.dto.*;
-import org.viniciusvirgilli.entity.SimulacaoRealizada;
+import org.viniciusvirgilli.model.SimulacaoRealizada;
 import org.viniciusvirgilli.enums.TipoSimulacao;
-import org.viniciusvirgilli.repository.SimulacaoRealizadaRepository;
+import org.viniciusvirgilli.dao.SimulacaoRealizadaRepository;
 import org.viniciusvirgilli.util.CalculadoraUtil;
-
-import com.arjuna.ats.arjuna.common.recoveryPropertyManager;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;

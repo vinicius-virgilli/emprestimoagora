@@ -1,18 +1,22 @@
-package org.viniciusvirgilli.repository;
+package org.viniciusvirgilli.dao;
 
 import io.quarkus.hibernate.orm.panache.PanacheRepository;
 import jakarta.enterprise.context.ApplicationScoped;
-import org.viniciusvirgilli.entity.Produto;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
+import lombok.extern.slf4j.Slf4j;
+import org.viniciusvirgilli.model.Produto;
 
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
-/**
- * Repositório Panache para operações CRUD da entidade Produto
- */
+@Slf4j
 @ApplicationScoped
-public class ProdutoRepository implements PanacheRepository<Produto> {
+public class ProdutoDao implements PanacheRepository<Produto> {
+
+    @PersistenceContext(name = "default")
+    EntityManager em;
 
     /**
      * Busca produto por código

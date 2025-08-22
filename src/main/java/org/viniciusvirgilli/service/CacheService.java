@@ -6,12 +6,11 @@ import io.quarkus.scheduler.Scheduled;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import org.jboss.logging.Logger;
-import org.viniciusvirgilli.entity.Produto;
-import org.viniciusvirgilli.repository.ProdutoRepository;
+import org.viniciusvirgilli.model.Produto;
+import org.viniciusvirgilli.dao.ProdutoDao;
 
 import java.math.BigDecimal;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 /**
  * Serviço responsável pelo gerenciamento de cache de produtos
@@ -24,7 +23,7 @@ public class CacheService {
     private static final String CACHE_NAME = "produtos-cache";
 
     @Inject
-    ProdutoRepository produtoRepository;
+    ProdutoDao produtoDao;
 
     /**
      * Busca produtos compatíveis com cache
@@ -35,7 +34,7 @@ public class CacheService {
         LOG.infof("Buscando produtos compatíveis no banco de dados para valor: %s, prazo: %d", 
                  valorDesejado, prazo);
         
-        return produtoRepository.findProdutosParaEmprestimo(valorDesejado, prazo);
+        return produtoDao.findProdutosParaEmprestimo(valorDesejado, prazo);
     }
 
     /**

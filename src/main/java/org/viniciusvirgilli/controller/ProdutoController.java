@@ -10,8 +10,8 @@ import org.eclipse.microprofile.openapi.annotations.media.Schema;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponses;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
-import org.viniciusvirgilli.entity.Produto;
-import org.viniciusvirgilli.repository.ProdutoRepository;
+import org.viniciusvirgilli.model.Produto;
+import org.viniciusvirgilli.dao.ProdutoDao;
 
 import java.util.List;
 import java.util.logging.Logger;
@@ -28,7 +28,7 @@ public class ProdutoController {
     private static final Logger LOGGER = Logger.getLogger(ProdutoController.class.getName());
 
     @Inject
-    ProdutoRepository produtoRepository;
+    ProdutoDao produtoDao;
 
     /**
      * Endpoint para listar todos os produtos disponíveis
@@ -58,7 +58,7 @@ public class ProdutoController {
         try {
             LOGGER.info("Consultando lista de produtos");
             
-            List<Produto> produtos = produtoRepository.listAll();
+            List<Produto> produtos = produtoDao.listAll();
             
             LOGGER.info("Encontrados " + produtos.size() + " produtos");
             

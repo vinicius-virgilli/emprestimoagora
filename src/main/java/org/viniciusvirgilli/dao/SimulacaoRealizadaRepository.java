@@ -1,9 +1,9 @@
-package org.viniciusvirgilli.repository;
+package org.viniciusvirgilli.dao;
 
 import io.quarkus.hibernate.orm.panache.PanacheRepository;
 import io.quarkus.panache.common.Page;
 import jakarta.enterprise.context.ApplicationScoped;
-import org.viniciusvirgilli.entity.SimulacaoRealizada;
+import org.viniciusvirgilli.model.SimulacaoRealizada;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;

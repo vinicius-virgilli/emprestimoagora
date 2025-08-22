@@ -8,8 +8,8 @@ import jakarta.enterprise.event.Observes;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
-import org.viniciusvirgilli.entity.Produto;
-import org.viniciusvirgilli.repository.ProdutoRepository;
+import org.viniciusvirgilli.model.Produto;
+import org.viniciusvirgilli.dao.ProdutoDao;
 
 import java.io.InputStream;
 import java.math.BigDecimal;
@@ -26,7 +26,7 @@ public class DataInitializer {
     private static final Logger LOGGER = Logger.getLogger(DataInitializer.class.getName());
 
     @Inject
-    ProdutoRepository produtoRepository;
+    ProdutoDao produtoDao;
 
     @ConfigProperty(name = "quarkus.profile")
     String activeProfile;
@@ -47,7 +47,7 @@ public class DataInitializer {
         }
         
         // Verifica se já existem produtos no banco
-        long totalProdutos = produtoRepository.count();
+        long totalProdutos = produtoDao.count();
         
         if (totalProdutos == 0) {
             LOGGER.info("Nenhum produto encontrado. Inserindo dados padrão...");
@@ -76,7 +76,7 @@ public class DataInitializer {
 
             // Insere cada produto se não existir
             for (ProdutoDTO produtoDTO : produtosDTO) {
-                if (!produtoRepository.existsByCodigoProduto(produtoDTO.getCodigoProduto())) {
+                if (!produtoDao.existsByCodigoProduto(produtoDTO.getCodigoProduto())) {
                     Produto produto = new Produto(
                         produtoDTO.getCodigoProduto(),
                         produtoDTO.getNomeProduto(),
@@ -86,7 +86,7 @@ public class DataInitializer {
                         produtoDTO.getValorMinimo(),
                         produtoDTO.getValorMaximo()
                     );
-                    produtoRepository.persist(produto);
+                    produtoDao.persist(produto);
                     LOGGER.info("Produto inserido: " + produto.nomeProduto + " (ID: " + produto.codigoProduto + ")");
                 }
             }
