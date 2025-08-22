@@ -1,6 +1,5 @@
-package org.viniciusvirgilli.model;
+package org.viniciusvirgilli.model.hack;
 
-import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -16,7 +15,7 @@ import java.math.BigDecimal;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "PRODUTO")
-public class Produto extends PanacheEntityBase {
+public class Produto {
 
     @Id
     @Column(name = "CO_PRODUTO")

@@ -1,4 +1,4 @@
-package org.viniciusvirgilli.model;
+package org.viniciusvirgilli.model.local;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
@@ -7,7 +7,6 @@ import jakarta.validation.constraints.Positive;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import lombok.*;
 
 @Entity
@@ -17,7 +16,7 @@ import lombok.*;
 @NoArgsConstructor
 @Builder
 @Table(name = "SIMULACAO_REALIZADA")
-public class SimulacaoRealizada extends PanacheEntityBase {
+public class SimulacaoRealizada {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

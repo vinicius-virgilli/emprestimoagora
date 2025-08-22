@@ -4,7 +4,7 @@ package org.viniciusvirgilli.dao;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
-import org.viniciusvirgilli.model.SimulacaoRealizada;
+import org.viniciusvirgilli.model.local.SimulacaoRealizada;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;

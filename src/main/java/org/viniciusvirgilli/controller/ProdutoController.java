@@ -10,7 +10,7 @@ import org.eclipse.microprofile.openapi.annotations.media.Schema;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponses;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
-import org.viniciusvirgilli.model.Produto;
+import org.viniciusvirgilli.model.hack.Produto;
 import org.viniciusvirgilli.dao.ProdutoDao;
 
 import java.util.List;
@@ -58,7 +58,7 @@ public class ProdutoController {
         try {
             LOGGER.info("Consultando lista de produtos");
             
-            List<Produto> produtos = produtoDao.listAll();
+            List<Produto> produtos = produtoDao.findAll();
             
             LOGGER.info("Encontrados " + produtos.size() + " produtos");
             

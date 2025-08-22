@@ -1,12 +1,10 @@
 package org.viniciusvirgilli.service;
 
-import io.quarkus.cache.CacheInvalidate;
 import io.quarkus.cache.CacheResult;
-import io.quarkus.scheduler.Scheduled;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import org.jboss.logging.Logger;
-import org.viniciusvirgilli.model.Produto;
+import org.viniciusvirgilli.model.hack.Produto;
 import org.viniciusvirgilli.dao.ProdutoDao;
 
 import java.math.BigDecimal;

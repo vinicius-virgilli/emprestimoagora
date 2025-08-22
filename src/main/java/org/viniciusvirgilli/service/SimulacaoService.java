@@ -4,7 +4,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import org.viniciusvirgilli.dto.*;
-import org.viniciusvirgilli.model.Produto;
+import org.viniciusvirgilli.model.hack.Produto;
 import org.viniciusvirgilli.enums.TipoSimulacao;
 import org.viniciusvirgilli.dao.ProdutoDao;
 
@@ -196,7 +196,7 @@ public class SimulacaoService {
      * Lista todos os produtos disponíveis
      */
     public List<Produto> listarTodosProdutos() {
-        return produtoDao.listAll();
+        return produtoDao.findAll();
     }
 
     /**

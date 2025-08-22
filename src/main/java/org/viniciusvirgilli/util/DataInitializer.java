@@ -8,7 +8,7 @@ import jakarta.enterprise.event.Observes;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
-import org.viniciusvirgilli.model.Produto;
+import org.viniciusvirgilli.model.hack.Produto;
 import org.viniciusvirgilli.dao.ProdutoDao;
 
 import java.io.InputStream;

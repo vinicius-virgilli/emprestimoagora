@@ -5,7 +5,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import lombok.extern.slf4j.Slf4j;
-import org.viniciusvirgilli.model.Produto;
+import org.viniciusvirgilli.model.hack.Produto;
 
 import java.math.BigDecimal;
 import java.util.List;

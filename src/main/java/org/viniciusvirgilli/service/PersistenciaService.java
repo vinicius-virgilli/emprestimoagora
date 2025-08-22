@@ -4,7 +4,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import org.viniciusvirgilli.dto.*;
-import org.viniciusvirgilli.model.SimulacaoRealizada;
+import org.viniciusvirgilli.model.local.SimulacaoRealizada;
 import org.viniciusvirgilli.enums.TipoSimulacao;
 import org.viniciusvirgilli.dao.SimulacaoRealizadaDao;
 import org.viniciusvirgilli.util.CalculadoraUtil;
@@ -14,7 +14,6 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
-import java.util.function.Supplier;
 import java.util.logging.Logger;
 
 /**
