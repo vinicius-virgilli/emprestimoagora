@@ -1,7 +1,6 @@
 package org.viniciusvirgilli.dao;
 
-import io.quarkus.hibernate.orm.panache.PanacheRepository;
-import io.quarkus.panache.common.Page;
+
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
@@ -13,47 +12,100 @@ import java.util.List;
 import java.util.Optional;
 
 @ApplicationScoped
-public class SimulacaoRealizadaDao implements PanacheRepository<SimulacaoRealizada> {
+public class SimulacaoRealizadaDao {
 
     @PersistenceContext(name = "local")
     EntityManager local;
 
+    // Métodos básicos de persistência
+    public void persist(SimulacaoRealizada entity) {
+        local.persist(entity);
+    }
+
+    public SimulacaoRealizada merge(SimulacaoRealizada entity) {
+        return local.merge(entity);
+    }
+
+    public void remove(SimulacaoRealizada entity) {
+        local.remove(entity);
+    }
+
+    public SimulacaoRealizada findById(Long id) {
+        return local.find(SimulacaoRealizada.class, id);
+    }
+
+    public List<SimulacaoRealizada> findAll() {
+        return local.createQuery(
+            "SELECT s FROM SimulacaoRealizada s ORDER BY s.dataSimulacao DESC",
+            SimulacaoRealizada.class
+        ).getResultList();
+    }
+
+    public long count() {
+        return local.createQuery(
+            "SELECT COUNT(s) FROM SimulacaoRealizada s",
+            Long.class
+        ).getSingleResult();
+    }
+
     public Optional<SimulacaoRealizada> findByIdSimulacao(Long idSimulacao) {
-        return find("idSimulacao", idSimulacao).firstResultOptional();
+        List<SimulacaoRealizada> resultado = local.createQuery(
+            "SELECT s FROM SimulacaoRealizada s WHERE s.idSimulacao = :idSimulacao",
+            SimulacaoRealizada.class
+        )
+        .setParameter("idSimulacao", idSimulacao)
+        .getResultList();
+        
+        return resultado.isEmpty() ? Optional.empty() : Optional.of(resultado.get(0));
     }
 
     public List<SimulacaoRealizada> findAllPaginado(int pagina, int tamanhoPagina) {
-        return findAll()
-            .page(Page.of(pagina, tamanhoPagina))
-            .list();
+        return local.createQuery(
+            "SELECT s FROM SimulacaoRealizada s ORDER BY s.dataSimulacao DESC",
+            SimulacaoRealizada.class
+        )
+        .setFirstResult(pagina * tamanhoPagina)
+        .setMaxResults(tamanhoPagina)
+        .getResultList();
     }
 
     public List<SimulacaoRealizada> findByData(LocalDate data) {
         LocalDateTime inicioDia = data.atStartOfDay();
         LocalDateTime fimDia = data.plusDays(1).atStartOfDay();
         
-        return list(
-            "dataSimulacao >= ?1 AND dataSimulacao < ?2",
-            inicioDia, fimDia
-        );
+        return local.createQuery(
+            "SELECT s FROM SimulacaoRealizada s WHERE s.dataSimulacao >= :inicioDia AND s.dataSimulacao < :fimDia",
+            SimulacaoRealizada.class
+        )
+        .setParameter("inicioDia", inicioDia)
+        .setParameter("fimDia", fimDia)
+        .getResultList();
     }
 
     public List<SimulacaoRealizada> findByProduto(Integer codigoProduto) {
-        return list("codigoProduto", codigoProduto);
+        return local.createQuery(
+            "SELECT s FROM SimulacaoRealizada s WHERE s.codigoProduto = :codigoProduto",
+            SimulacaoRealizada.class
+        )
+        .setParameter("codigoProduto", codigoProduto)
+        .getResultList();
     }
 
     public List<SimulacaoRealizada> findByFaixaValor(java.math.BigDecimal valorMinimo, java.math.BigDecimal valorMaximo) {
-        return list(
-            "valorDesejado >= ?1 AND valorDesejado <= ?2",
-            valorMinimo, valorMaximo
-        );
+        return local.createQuery(
+            "SELECT s FROM SimulacaoRealizada s WHERE s.valorDesejado >= :valorMinimo AND s.valorDesejado <= :valorMaximo",
+            SimulacaoRealizada.class
+        )
+        .setParameter("valorMinimo", valorMinimo)
+        .setParameter("valorMaximo", valorMaximo)
+        .getResultList();
     }
 
     public List<Object[]> findVolumePorProdutoPorDia(LocalDate dataReferencia) {
         LocalDateTime inicioDia = dataReferencia.atStartOfDay();
         LocalDateTime fimDia = dataReferencia.plusDays(1).atStartOfDay();
         
-        return getEntityManager().createQuery(
+        return local.createQuery(
             "SELECT s.codigoProduto, " +
             "       s.descricaoProduto, " +
             "       AVG(s.taxaJuros) as taxaMediaJuros, " +
@@ -78,7 +130,7 @@ public class SimulacaoRealizadaDao implements PanacheRepository<SimulacaoRealiza
         LocalDateTime inicioDateTime = dataInicio.atStartOfDay();
         LocalDateTime fimDateTime = dataFim.plusDays(1).atStartOfDay();
         
-        return getEntityManager().createQuery(
+        return local.createQuery(
             "SELECT s.codigoProduto, " +
             "       s.descricaoProduto, " +
             "       AVG(s.taxaJuros) as taxaMediaJuros, " +
@@ -103,7 +155,7 @@ public class SimulacaoRealizadaDao implements PanacheRepository<SimulacaoRealiza
         LocalDateTime inicioDia = dataReferencia.atStartOfDay();
         LocalDateTime fimDia = dataReferencia.plusDays(1).atStartOfDay();
         
-        List<Object[]> resultado = getEntityManager().createQuery(
+        List<Object[]> resultado = local.createQuery(
             "SELECT COUNT(s) as qtdRequisicoes, " +
             "       AVG(1.5) as tempoMedio, " +  // Simulando tempo médio de 1.5s
             "       MIN(0.8) as tempoMinimo, " +   // Simulando tempo mínimo de 0.8s
@@ -121,38 +173,56 @@ public class SimulacaoRealizadaDao implements PanacheRepository<SimulacaoRealiza
     }
 
     public List<SimulacaoRealizada> findByPeriodo(LocalDateTime dataInicio, LocalDateTime dataFim) {
-        return list(
-            "dataSimulacao >= ?1 AND dataSimulacao <= ?2",
-            dataInicio, dataFim
-        );
+        return local.createQuery(
+            "SELECT s FROM SimulacaoRealizada s WHERE s.dataSimulacao >= :dataInicio AND s.dataSimulacao <= :dataFim",
+            SimulacaoRealizada.class
+        )
+        .setParameter("dataInicio", dataInicio)
+        .setParameter("dataFim", dataFim)
+        .getResultList();
     }
 
     public long countByProduto(Integer codigoProduto) {
-        return count("codigoProduto", codigoProduto);
+        return local.createQuery(
+            "SELECT COUNT(s) FROM SimulacaoRealizada s WHERE s.codigoProduto = :codigoProduto",
+            Long.class
+        )
+        .setParameter("codigoProduto", codigoProduto)
+        .getSingleResult();
     }
 
     public long countByData(LocalDate data) {
         LocalDateTime inicioDia = data.atStartOfDay();
         LocalDateTime fimDia = data.plusDays(1).atStartOfDay();
         
-        return count(
-            "dataSimulacao >= ?1 AND dataSimulacao < ?2",
-            inicioDia, fimDia
-        );
+        return local.createQuery(
+            "SELECT COUNT(s) FROM SimulacaoRealizada s WHERE s.dataSimulacao >= :inicioDia AND s.dataSimulacao < :fimDia",
+            Long.class
+        )
+        .setParameter("inicioDia", inicioDia)
+        .setParameter("fimDia", fimDia)
+        .getSingleResult();
     }
 
     public int deleteSimulacoesAntigas(LocalDateTime dataLimite) {
-        return (int) delete("dataSimulacao < ?1", dataLimite);
+        return local.createQuery(
+            "DELETE FROM SimulacaoRealizada s WHERE s.dataSimulacao < :dataLimite"
+        )
+        .setParameter("dataLimite", dataLimite)
+        .executeUpdate();
     }
 
     public List<SimulacaoRealizada> findUltimasSimulacoes(int limite) {
-        return find("ORDER BY dataSimulacao DESC")
-            .page(Page.ofSize(limite))
-            .list();
+        return local.createQuery(
+            "SELECT s FROM SimulacaoRealizada s ORDER BY s.dataSimulacao DESC",
+            SimulacaoRealizada.class
+        )
+        .setMaxResults(limite)
+        .getResultList();
     }
 
     public List<Object[]> findProdutosMaisSimulados(int limite) {
-        return getEntityManager().createQuery(
+        return local.createQuery(
             "SELECT s.codigoProduto, s.descricaoProduto, COUNT(s) as total " +
             "FROM SimulacaoRealizada s " +
             "GROUP BY s.codigoProduto, s.descricaoProduto " +
@@ -167,7 +237,7 @@ public class SimulacaoRealizadaDao implements PanacheRepository<SimulacaoRealiza
         LocalDateTime inicio = dataInicio.atStartOfDay();
         LocalDateTime fim = dataFim.plusDays(1).atStartOfDay();
         
-        Object resultado = getEntityManager().createQuery(
+        Object resultado = local.createQuery(
             "SELECT AVG(s.valorDesejado) " +
             "FROM SimulacaoRealizada s " +
             "WHERE s.dataSimulacao >= :inicio AND s.dataSimulacao < :fim"

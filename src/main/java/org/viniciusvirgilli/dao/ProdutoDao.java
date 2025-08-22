@@ -1,6 +1,6 @@
 package org.viniciusvirgilli.dao;
 
-import io.quarkus.hibernate.orm.panache.PanacheRepository;
+
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
@@ -13,10 +13,41 @@ import java.util.Optional;
 
 @Slf4j
 @ApplicationScoped
-public class ProdutoDao implements PanacheRepository<Produto> {
+public class ProdutoDao {
 
     @PersistenceContext(name = "default")
     EntityManager em;
+
+    // Métodos básicos de persistência
+    public void persist(Produto entity) {
+        em.persist(entity);
+    }
+
+    public Produto merge(Produto entity) {
+        return em.merge(entity);
+    }
+
+    public void remove(Produto entity) {
+        em.remove(entity);
+    }
+
+    public Produto findById(Long id) {
+        return em.find(Produto.class, id);
+    }
+
+    public List<Produto> findAll() {
+        return em.createQuery(
+            "SELECT p FROM Produto p ORDER BY p.codigoProduto",
+            Produto.class
+        ).getResultList();
+    }
+
+    public long count() {
+        return em.createQuery(
+            "SELECT COUNT(p) FROM Produto p",
+            Long.class
+        ).getSingleResult();
+    }
 
     /**
      * Busca produto por código
@@ -24,7 +55,14 @@ public class ProdutoDao implements PanacheRepository<Produto> {
      * @return Optional com o produto encontrado
      */
     public Optional<Produto> findByCodigoProduto(Integer codigoProduto) {
-        return find("codigoProduto", codigoProduto).firstResultOptional();
+        List<Produto> resultado = em.createQuery(
+            "SELECT p FROM Produto p WHERE p.codigoProduto = :codigoProduto",
+            Produto.class
+        )
+        .setParameter("codigoProduto", codigoProduto)
+        .getResultList();
+        
+        return resultado.isEmpty() ? Optional.empty() : Optional.of(resultado.get(0));
     }
 
     /**
@@ -33,7 +71,12 @@ public class ProdutoDao implements PanacheRepository<Produto> {
      * @return lista de produtos encontrados
      */
     public List<Produto> findByNomeProduto(String nomeProduto) {
-        return find("nomeProduto like ?1", "%" + nomeProduto + "%").list();
+        return em.createQuery(
+            "SELECT p FROM Produto p WHERE p.nomeProduto LIKE :nomeProduto",
+            Produto.class
+        )
+        .setParameter("nomeProduto", "%" + nomeProduto + "%")
+        .getResultList();
     }
 
     /**
@@ -43,7 +86,13 @@ public class ProdutoDao implements PanacheRepository<Produto> {
      * @return lista de produtos na faixa especificada
      */
     public List<Produto> findByFaixaTaxaJuros(BigDecimal taxaMinima, BigDecimal taxaMaxima) {
-        return find("percentualTaxaJuros >= ?1 and percentualTaxaJuros <= ?2", taxaMinima, taxaMaxima).list();
+        return em.createQuery(
+            "SELECT p FROM Produto p WHERE p.percentualTaxaJuros >= :taxaMinima AND p.percentualTaxaJuros <= :taxaMaxima",
+            Produto.class
+        )
+        .setParameter("taxaMinima", taxaMinima)
+        .setParameter("taxaMaxima", taxaMaxima)
+        .getResultList();
     }
 
     /**
@@ -53,8 +102,13 @@ public class ProdutoDao implements PanacheRepository<Produto> {
      * @return lista de produtos na faixa especificada
      */
     public List<Produto> findByFaixaMeses(Short mesesMinimo, Short mesesMaximo) {
-        return find("numeroMinimoMeses >= ?1 and (numeroMaximoMeses <= ?2 or numeroMaximoMeses is null)", 
-                   mesesMinimo, mesesMaximo).list();
+        return em.createQuery(
+            "SELECT p FROM Produto p WHERE p.numeroMinimoMeses >= :mesesMinimo AND (p.numeroMaximoMeses <= :mesesMaximo OR p.numeroMaximoMeses IS NULL)",
+            Produto.class
+        )
+        .setParameter("mesesMinimo", mesesMinimo)
+        .setParameter("mesesMaximo", mesesMaximo)
+        .getResultList();
     }
 
     /**
@@ -64,8 +118,13 @@ public class ProdutoDao implements PanacheRepository<Produto> {
      * @return lista de produtos na faixa especificada
      */
     public List<Produto> findByFaixaValor(BigDecimal valorMinimo, BigDecimal valorMaximo) {
-        return find("valorMinimo <= ?1 and (valorMaximo >= ?2 or valorMaximo is null)", 
-                   valorMinimo, valorMaximo).list();
+        return em.createQuery(
+            "SELECT p FROM Produto p WHERE p.valorMinimo <= :valorMinimo AND (p.valorMaximo >= :valorMaximo OR p.valorMaximo IS NULL)",
+            Produto.class
+        )
+        .setParameter("valorMinimo", valorMinimo)
+        .setParameter("valorMaximo", valorMaximo)
+        .getResultList();
     }
 
     /**
@@ -75,9 +134,14 @@ public class ProdutoDao implements PanacheRepository<Produto> {
      * @return lista de produtos adequados
      */
     public List<Produto> findProdutosParaEmprestimo(BigDecimal valorEmprestimo, Short prazoMeses) {
-        return find("valorMinimo <= ?1 and (valorMaximo >= ?1 or valorMaximo is null) " +
-                   "and numeroMinimoMeses <= ?2 and (numeroMaximoMeses >= ?2 or numeroMaximoMeses is null)", 
-                   valorEmprestimo, prazoMeses).list();
+        return em.createQuery(
+            "SELECT p FROM Produto p WHERE p.valorMinimo <= :valorEmprestimo AND (p.valorMaximo >= :valorEmprestimo OR p.valorMaximo IS NULL) " +
+            "AND p.numeroMinimoMeses <= :prazoMeses AND (p.numeroMaximoMeses >= :prazoMeses OR p.numeroMaximoMeses IS NULL)",
+            Produto.class
+        )
+        .setParameter("valorEmprestimo", valorEmprestimo)
+        .setParameter("prazoMeses", prazoMeses)
+        .getResultList();
     }
 
     /**
@@ -85,7 +149,10 @@ public class ProdutoDao implements PanacheRepository<Produto> {
      * @return lista de produtos ordenada por taxa crescente
      */
     public List<Produto> findAllOrderByTaxaJuros() {
-        return find("order by percentualTaxaJuros asc").list();
+        return em.createQuery(
+            "SELECT p FROM Produto p ORDER BY p.percentualTaxaJuros ASC",
+            Produto.class
+        ).getResultList();
     }
 
     /**
@@ -93,7 +160,10 @@ public class ProdutoDao implements PanacheRepository<Produto> {
      * @return lista de produtos ordenada por valor mínimo crescente
      */
     public List<Produto> findAllOrderByValorMinimo() {
-        return find("order by valorMinimo asc").list();
+        return em.createQuery(
+            "SELECT p FROM Produto p ORDER BY p.valorMinimo ASC",
+            Produto.class
+        ).getResultList();
     }
 
     /**
@@ -102,7 +172,14 @@ public class ProdutoDao implements PanacheRepository<Produto> {
      * @return true se existe, false caso contrário
      */
     public boolean existsByCodigoProduto(Integer codigoProduto) {
-        return count("codigoProduto", codigoProduto) > 0;
+        Long count = em.createQuery(
+            "SELECT COUNT(p) FROM Produto p WHERE p.codigoProduto = :codigoProduto",
+            Long.class
+        )
+        .setParameter("codigoProduto", codigoProduto)
+        .getSingleResult();
+        
+        return count > 0;
     }
 
     /**
@@ -111,6 +188,10 @@ public class ProdutoDao implements PanacheRepository<Produto> {
      * @return número de registros removidos
      */
     public long deleteByCodigoProduto(Integer codigoProduto) {
-        return delete("codigoProduto", codigoProduto);
+        return em.createQuery(
+            "DELETE FROM Produto p WHERE p.codigoProduto = :codigoProduto"
+        )
+        .setParameter("codigoProduto", codigoProduto)
+        .executeUpdate();
     }
 }
