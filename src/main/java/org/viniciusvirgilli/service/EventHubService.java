@@ -7,6 +7,10 @@ import org.viniciusvirgilli.dto.SimulacaoResponseDTO;
 import java.util.concurrent.CompletableFuture;
 import java.util.logging.Logger;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.azure.messaging.eventhubs.EventData;
+import com.azure.messaging.eventhubs.EventHubClientBuilder;
+import com.azure.messaging.eventhubs.EventHubProducerClient;
+// Imports comentados temporariamente devido a problemas de compatibilidade
 
 /**
  * Serviço para integração com Azure Event Hub
@@ -40,17 +44,20 @@ public class EventHubService {
      */
     public void enviarEventoSimulacao(SimulacaoResponseDTO simulacaoResponse) {
         if (!eventHubEnabled) {
-            LOGGER.info("Event Hub desabilitado. Simulando envio do evento...");
-            simularEnvioEvento(simulacaoResponse);
+            LOGGER.info("Event Hub desabilitado. Evento não será enviado.");
             return;
         }
 
+        // Envio assíncrono para EventHub real
         CompletableFuture.runAsync(() -> {
             try {
                 enviarEventoReal(simulacaoResponse);
+                LOGGER.info("Evento enviado com sucesso para EventHub real. ID Simulação: " + simulacaoResponse.getIdSimulacao());
             } catch (Exception e) {
-                LOGGER.severe("Erro ao enviar evento para Event Hub: " + e.getMessage());
-                throw new RuntimeException("Falha no envio para Event Hub", e);
+                // Log do erro mas não falha a operação principal
+                LOGGER.severe("ERRO ao enviar evento para EventHub real - ID Simulação: " + 
+                    simulacaoResponse.getIdSimulacao() + ", Erro: " + e.getMessage());
+                // Não propaga a exceção para não afetar o fluxo principal
             }
         });
     }
@@ -83,22 +90,46 @@ public class EventHubService {
             throw new IllegalStateException("Connection string do Event Hub não configurada");
         }
 
-        // TODO: Implementar integração real com Azure Event Hub
-        // Aqui seria implementada a integração real usando o SDK do Azure Event Hub
-        
         String eventoJson = objectMapper.writeValueAsString(criarEnvelopeEvento(simulacaoResponse));
         
         LOGGER.info("Enviando evento para Event Hub real: " + eventHubName);
         LOGGER.info("Tamanho do evento: " + eventoJson.length() + " bytes");
         
-        // Placeholder para implementação real
-        // EventHubProducerClient producer = new EventHubClientBuilder()
-        //     .connectionString(eventHubConnectionString, eventHubName)
-        //     .buildProducerClient();
-        // 
-        // EventData eventData = new EventData(eventoJson);
-        // producer.send(eventData);
-        // producer.close();
+        // Implementação real com Azure Event Hub SDK
+        EventHubProducerClient producer = null;
+        try {
+            LOGGER.info("=== ENVIANDO PARA EVENTHUB REAL ===");
+            LOGGER.info("Connection String: " + eventHubConnectionString.substring(0, 50) + "...");
+            LOGGER.info("Event Hub Name: " + eventHubName);
+            LOGGER.info("Evento JSON: " + eventoJson);
+            LOGGER.info("Tamanho: " + eventoJson.length() + " bytes");
+            
+            // Criar o cliente do Event Hub
+            producer = new EventHubClientBuilder()
+                .connectionString(eventHubConnectionString, eventHubName)
+                .buildProducerClient();
+            
+            // Criar o evento
+            EventData eventData = new EventData(eventoJson);
+            
+            // Enviar o evento
+            producer.send(java.util.Arrays.asList(eventData));
+            
+            LOGGER.info("Evento enviado com SUCESSO para EventHub REAL: " + eventHubName);
+            LOGGER.info("=== FIM ENVIO EVENTHUB REAL ===");
+            
+        } catch (Exception e) {
+            LOGGER.severe("Erro ao enviar evento para EventHub real: " + e.getMessage());
+            throw new RuntimeException("Falha no envio para EventHub", e);
+        } finally {
+            if (producer != null) {
+                try {
+                    producer.close();
+                } catch (Exception e) {
+                    LOGGER.warning("Erro ao fechar producer do EventHub: " + e.getMessage());
+                }
+            }
+        }
     }
 
     /**

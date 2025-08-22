@@ -86,7 +86,7 @@ public class SimulacaoController {
     @Path("/processar")
     @Operation(
         summary = "Processar simulação de empréstimo",
-        description = "Recebe solicitação de simulação, valida dados, calcula SAC e PRICE, e retorna resultados"
+        description = "Recebe solicitação de simulação, valida dados, calcula SAC e PRICE, persiste no banco de dados de forma síncrona e retorna resultados"
     )
     @APIResponse(
         responseCode = "200",
@@ -106,7 +106,7 @@ public class SimulacaoController {
     )
     @APIResponse(
         responseCode = "500",
-        description = "Erro interno do servidor"
+        description = "Erro interno do servidor ou erro de persistência no banco de dados"
     )
     public Response processarSimulacao(@Valid SimulacaoRequestDTO request) {
         // Incrementar contador de requisições totais
@@ -123,22 +123,17 @@ public class SimulacaoController {
             
             LOGGER.info("Simulação processada com sucesso. ID: " + response.getIdSimulacao());
 
-            // 2. Enviar para Event Hub (assíncrono)
+            // 2. Persistir simulação no banco local (síncrono - obrigatório)
+            persistenciaService.persistirSimulacao(request, response);
+            LOGGER.info("Simulação persistida no banco local com sucesso");
+            
+            // 3. Enviar para Event Hub (assíncrono - opcional)
             try {
                 eventHubService.enviarEventoSimulacao(response);
                 LOGGER.info("Evento enviado para Event Hub com sucesso");
             } catch (Exception e) {
                 LOGGER.warning("Erro ao enviar evento para Event Hub: " + e.getMessage());
                 // Não falha a operação se o Event Hub falhar
-            }
-            
-            // 3. Persistir simulação no banco local (assíncrono)
-            try {
-                persistenciaService.persistirSimulacao(request, response);
-                LOGGER.info("Simulação persistida no banco local com sucesso");
-            } catch (Exception e) {
-                LOGGER.warning("Erro ao persistir simulação no banco local: " + e.getMessage());
-                // Não falha a operação se a persistência falhar
             }
             
             // Incrementar contador de sucesso
@@ -160,6 +155,19 @@ public class SimulacaoController {
             
             return Response.status(Response.Status.BAD_REQUEST)
                 .entity(new ErrorResponse("VALIDATION_ERROR", e.getMessage()))
+                .build();
+                
+        } catch (jakarta.persistence.PersistenceException e) {
+            LOGGER.severe("Erro ao persistir simulação no banco de dados: " + e.getMessage());
+            
+            // Incrementar contador de erro
+            simulacaoErrorCounter.increment();
+            
+            // Registrar tempo de resposta para requisições com erro
+            sample.stop(simulacaoTimer);
+            
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                .entity(new ErrorResponse("PERSISTENCE_ERROR", "Erro ao salvar simulação no banco de dados"))
                 .build();
                 
         } catch (Exception e) {

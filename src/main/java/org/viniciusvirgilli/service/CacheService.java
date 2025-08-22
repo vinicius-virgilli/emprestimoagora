@@ -37,31 +37,4 @@ public class CacheService {
         return produtoDao.findProdutosParaEmprestimo(valorDesejado, prazo);
     }
 
-    /**
-     * Invalida o cache automaticamente a cada 1 minuto
-     * Isso força uma nova consulta ao banco de dados na próxima requisição
-     */
-    @Scheduled(every = "1m")
-    @CacheInvalidate(cacheName = CACHE_NAME)
-    public void invalidarCacheProdutos() {
-        LOG.info("Cache de produtos invalidado automaticamente");
-    }
-
-    /**
-     * Método para invalidar o cache manualmente se necessário
-     */
-    @CacheInvalidate(cacheName = CACHE_NAME)
-    public void invalidarCacheManualmente() {
-        LOG.info("Cache de produtos invalidado manualmente");
-    }
-
-    /**
-     * Pré-carrega o cache com uma consulta genérica
-     * Útil para inicialização da aplicação
-     */
-    public void preCarregarCache() {
-        LOG.info("Pré-carregando cache de produtos");
-        // Busca com valores padrão para popular o cache inicial
-        buscarProdutosCompativeis(new BigDecimal("1000"), (short) 12);
-    }
 }

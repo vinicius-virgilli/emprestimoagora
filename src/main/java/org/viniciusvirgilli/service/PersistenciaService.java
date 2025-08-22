@@ -6,7 +6,7 @@ import jakarta.transaction.Transactional;
 import org.viniciusvirgilli.dto.*;
 import org.viniciusvirgilli.model.SimulacaoRealizada;
 import org.viniciusvirgilli.enums.TipoSimulacao;
-import org.viniciusvirgilli.dao.SimulacaoRealizadaRepository;
+import org.viniciusvirgilli.dao.SimulacaoRealizadaDao;
 import org.viniciusvirgilli.util.CalculadoraUtil;
 
 import java.math.BigDecimal;
@@ -14,6 +14,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Supplier;
 import java.util.logging.Logger;
 
 /**
@@ -25,11 +26,11 @@ public class PersistenciaService {
     private static final Logger LOGGER = Logger.getLogger(PersistenciaService.class.getName());
 
     @Inject
-    SimulacaoRealizadaRepository simulacaoRepository;
+    SimulacaoRealizadaDao simulacaoRepository;
 
     /**
      * Persiste uma simulação realizada no banco local de forma assíncrona
-     * 
+     *
      * @param request dados da requisição
      * @param response dados da resposta
      */
@@ -64,7 +65,7 @@ public class PersistenciaService {
 
             simulacaoRepository.persist(simulacao);
             LOGGER.info("Simulação persistida com ID: " + simulacao.getId());
-            
+
         } catch (Exception e) {
             LOGGER.severe("Erro ao persistir simulação no banco: " + e.getMessage());
             throw e;
@@ -78,20 +79,20 @@ public class PersistenciaService {
         try {
             List<SimulacaoRealizada> simulacoes = simulacaoRepository
                 .findAllPaginado(pagina, tamanhoPagina);
-            
+
             long totalRegistros = simulacaoRepository.count();
-            
+
             List<SimulacaoResumoDTO> resumos = simulacoes.stream()
                 .map(this::converterParaResumo)
                 .toList();
-            
+
             return new ListagemSimulacoesResponseDTO(
                 pagina,
                 (int) totalRegistros,
                 resumos.size(),
                 resumos
             );
-            
+
         } catch (Exception e) {
             LOGGER.severe("Erro ao buscar simulações: " + e.getMessage());
             throw new RuntimeException("Erro ao buscar simulações", e);
@@ -105,13 +106,13 @@ public class PersistenciaService {
         try {
             List<Object[]> resultados = simulacaoRepository
                 .findVolumePorProdutoPorDia(dataReferencia);
-            
+
             List<VolumeSimuladoDTO> volumes = resultados.stream()
                 .map(this::converterParaVolumeSimulado)
                 .toList();
-            
+
             return new VolumeDiarioResponseDTO(dataReferencia, volumes);
-            
+
         } catch (Exception e) {
             LOGGER.severe("Erro ao buscar volume diário: " + e.getMessage());
             throw new RuntimeException("Erro ao buscar volume diário", e);
@@ -125,13 +126,13 @@ public class PersistenciaService {
         try {
             List<Object[]> resultados = simulacaoRepository
                 .findVolumePorProdutoPorPeriodo(dataInicio, dataFim);
-            
+
             List<VolumeSimuladoDTO> volumes = resultados.stream()
                 .map(this::converterParaVolumeSimulado)
                 .toList();
-            
+
             return new VolumePeriodoResponseDTO(dataInicio, dataFim, volumes);
-            
+
         } catch (Exception e) {
             LOGGER.severe("Erro ao buscar volume por período: " + e.getMessage());
             throw new RuntimeException("Erro ao buscar volume por período", e);
@@ -144,27 +145,27 @@ public class PersistenciaService {
     public TelemetriaResponseDTO buscarTelemetria(LocalDate dataReferencia) {
         try {
             LOGGER.info("Iniciando busca de telemetria para data: " + dataReferencia);
-            
+
             // Buscar estatísticas das simulações
             Object[] stats = simulacaoRepository.findEstatisticasPorDia(dataReferencia);
-            
+
             LOGGER.info("Estatísticas retornadas: " + java.util.Arrays.toString(stats));
-            
+
             // Verificar se stats não é null e tem pelo menos 5 elementos
             if (stats == null || stats.length < 5) {
                 LOGGER.warning("Estatísticas inválidas ou insuficientes. Usando valores padrão.");
                 stats = new Object[]{0L, 1.5, 0.8, 3.2, 100.0};
             }
-            
+
             // Converter com segurança (valores vêm em segundos, converter para milissegundos)
             int qtdRequisicoes = stats[0] != null ? ((Number) stats[0]).intValue() : 0;
             int tempoMedio = stats[1] != null ? (int)(((Number) stats[1]).doubleValue() * 1000) : 1500; // converter s para ms
             int tempoMinimo = stats[2] != null ? (int)(((Number) stats[2]).doubleValue() * 1000) : 800; // converter s para ms
             int tempoMaximo = stats[3] != null ? (int)(((Number) stats[3]).doubleValue() * 1000) : 3200; // converter s para ms
-            
-            LOGGER.info(String.format("Valores convertidos: qtd=%d, medio=%d, min=%d, max=%d", 
+
+            LOGGER.info(String.format("Valores convertidos: qtd=%d, medio=%d, min=%d, max=%d",
                 qtdRequisicoes, tempoMedio, tempoMinimo, tempoMaximo));
-            
+
             TelemetriaEndpointDTO telemetriaSimulacao = new TelemetriaEndpointDTO(
                 "POST /api/simulacao/processar",
                 qtdRequisicoes,
@@ -173,12 +174,12 @@ public class PersistenciaService {
                 tempoMaximo,
                 java.math.BigDecimal.valueOf(0.95) // percentualSucesso
             );
-            
+
             return new TelemetriaResponseDTO(
                 dataReferencia,
                 List.of(telemetriaSimulacao)
             );
-            
+
         } catch (Exception e) {
             LOGGER.severe("Erro ao buscar telemetria: " + e.getMessage());
             e.printStackTrace();
@@ -231,7 +232,7 @@ public class PersistenciaService {
             convertToBigDecimal(resultado[8])  // valorTotalCreditoPRICE
         );
     }
-    
+
     private BigDecimal convertToBigDecimal(Object value) {
         if (value == null) {
             return BigDecimal.ZERO;

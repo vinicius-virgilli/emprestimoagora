@@ -3,6 +3,8 @@ package org.viniciusvirgilli.dao;
 import io.quarkus.hibernate.orm.panache.PanacheRepository;
 import io.quarkus.panache.common.Page;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import org.viniciusvirgilli.model.SimulacaoRealizada;
 
 import java.time.LocalDate;
@@ -10,31 +12,22 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
-/**
- * Repository para operações com a entidade SimulacaoRealizada
- */
 @ApplicationScoped
-public class SimulacaoRealizadaRepository implements PanacheRepository<SimulacaoRealizada> {
+public class SimulacaoRealizadaDao implements PanacheRepository<SimulacaoRealizada> {
 
-    /**
-     * Busca simulação por ID da simulação
-     */
+    @PersistenceContext(name = "local")
+    EntityManager local;
+
     public Optional<SimulacaoRealizada> findByIdSimulacao(Long idSimulacao) {
         return find("idSimulacao", idSimulacao).firstResultOptional();
     }
 
-    /**
-     * Busca todas as simulações com paginação
-     */
     public List<SimulacaoRealizada> findAllPaginado(int pagina, int tamanhoPagina) {
         return findAll()
             .page(Page.of(pagina, tamanhoPagina))
             .list();
     }
 
-    /**
-     * Busca simulações por data
-     */
     public List<SimulacaoRealizada> findByData(LocalDate data) {
         LocalDateTime inicioDia = data.atStartOfDay();
         LocalDateTime fimDia = data.plusDays(1).atStartOfDay();
@@ -45,16 +38,10 @@ public class SimulacaoRealizadaRepository implements PanacheRepository<Simulacao
         );
     }
 
-    /**
-     * Busca simulações por produto
-     */
     public List<SimulacaoRealizada> findByProduto(Integer codigoProduto) {
         return list("codigoProduto", codigoProduto);
     }
 
-    /**
-     * Busca simulações por faixa de valor
-     */
     public List<SimulacaoRealizada> findByFaixaValor(java.math.BigDecimal valorMinimo, java.math.BigDecimal valorMaximo) {
         return list(
             "valorDesejado >= ?1 AND valorDesejado <= ?2",
@@ -62,9 +49,6 @@ public class SimulacaoRealizadaRepository implements PanacheRepository<Simulacao
         );
     }
 
-    /**
-     * Busca volume simulado por produto por dia
-     */
     public List<Object[]> findVolumePorProdutoPorDia(LocalDate dataReferencia) {
         LocalDateTime inicioDia = dataReferencia.atStartOfDay();
         LocalDateTime fimDia = dataReferencia.plusDays(1).atStartOfDay();
@@ -90,9 +74,6 @@ public class SimulacaoRealizadaRepository implements PanacheRepository<Simulacao
         .getResultList();
     }
 
-    /**
-     * Busca volume simulado por produto por período
-     */
     public List<Object[]> findVolumePorProdutoPorPeriodo(LocalDate dataInicio, LocalDate dataFim) {
         LocalDateTime inicioDateTime = dataInicio.atStartOfDay();
         LocalDateTime fimDateTime = dataFim.plusDays(1).atStartOfDay();
@@ -118,9 +99,6 @@ public class SimulacaoRealizadaRepository implements PanacheRepository<Simulacao
         .getResultList();
     }
 
-    /**
-     * Busca estatísticas para telemetria por dia
-     */
     public Object[] findEstatisticasPorDia(LocalDate dataReferencia) {
         LocalDateTime inicioDia = dataReferencia.atStartOfDay();
         LocalDateTime fimDia = dataReferencia.plusDays(1).atStartOfDay();
@@ -142,9 +120,6 @@ public class SimulacaoRealizadaRepository implements PanacheRepository<Simulacao
         return resultado.isEmpty() ? new Object[]{0, 1.5, 0.8, 3.2, 100.0} : resultado.get(0);
     }
 
-    /**
-     * Busca simulações por período
-     */
     public List<SimulacaoRealizada> findByPeriodo(LocalDateTime dataInicio, LocalDateTime dataFim) {
         return list(
             "dataSimulacao >= ?1 AND dataSimulacao <= ?2",
@@ -152,16 +127,10 @@ public class SimulacaoRealizadaRepository implements PanacheRepository<Simulacao
         );
     }
 
-    /**
-     * Conta simulações por produto
-     */
     public long countByProduto(Integer codigoProduto) {
         return count("codigoProduto", codigoProduto);
     }
 
-    /**
-     * Conta simulações por data
-     */
     public long countByData(LocalDate data) {
         LocalDateTime inicioDia = data.atStartOfDay();
         LocalDateTime fimDia = data.plusDays(1).atStartOfDay();
@@ -172,25 +141,16 @@ public class SimulacaoRealizadaRepository implements PanacheRepository<Simulacao
         );
     }
 
-    /**
-     * Remove simulações antigas
-     */
     public int deleteSimulacoesAntigas(LocalDateTime dataLimite) {
         return (int) delete("dataSimulacao < ?1", dataLimite);
     }
 
-    /**
-     * Busca últimas simulações
-     */
     public List<SimulacaoRealizada> findUltimasSimulacoes(int limite) {
         return find("ORDER BY dataSimulacao DESC")
             .page(Page.ofSize(limite))
             .list();
     }
 
-    /**
-     * Busca simulações mais populares (por produto)
-     */
     public List<Object[]> findProdutosMaisSimulados(int limite) {
         return getEntityManager().createQuery(
             "SELECT s.codigoProduto, s.descricaoProduto, COUNT(s) as total " +
@@ -203,9 +163,6 @@ public class SimulacaoRealizadaRepository implements PanacheRepository<Simulacao
         .getResultList();
     }
 
-    /**
-     * Calcula valor médio simulado por período
-     */
     public java.math.BigDecimal calcularValorMedioSimulado(LocalDate dataInicio, LocalDate dataFim) {
         LocalDateTime inicio = dataInicio.atStartOfDay();
         LocalDateTime fim = dataFim.plusDays(1).atStartOfDay();
