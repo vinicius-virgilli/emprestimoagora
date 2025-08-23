@@ -1,23 +1,25 @@
 package org.viniciusvirgilli.service;
 
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.viniciusvirgilli.dto.SimulacaoResponseDTO;
 
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.logging.Logger;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.azure.messaging.eventhubs.EventData;
-import com.azure.messaging.eventhubs.EventHubClientBuilder;
 import com.azure.messaging.eventhubs.EventHubProducerClient;
-// Imports comentados temporariamente devido a problemas de compatibilidade
 
 /**
  * Serviço para integração com Azure Event Hub
- * Simula o envio de eventos de simulação para integração com área de relacionamento
  */
 @ApplicationScoped
 public class EventHubService {
+
+    @Inject
+    EventHubProducerClient producerClient;
 
     private static final Logger LOGGER = Logger.getLogger(EventHubService.class.getName());
     
@@ -48,121 +50,42 @@ public class EventHubService {
             return;
         }
 
-        // Envio assíncrono para EventHub real
         CompletableFuture.runAsync(() -> {
             try {
-                enviarEventoReal(simulacaoResponse);
-                LOGGER.info("Evento enviado com sucesso para EventHub real. ID Simulação: " + simulacaoResponse.getIdSimulacao());
+                enviarEvento(simulacaoResponse);
+                LOGGER.info("Evento enviado com sucesso para EventHub. ID Simulação: " + simulacaoResponse.getIdSimulacao());
             } catch (Exception e) {
-                // Log do erro mas não falha a operação principal
-                LOGGER.severe("ERRO ao enviar evento para EventHub real - ID Simulação: " + 
+                LOGGER.severe("ERRO ao enviar evento para EventHub - ID Simulação: " +
                     simulacaoResponse.getIdSimulacao() + ", Erro: " + e.getMessage());
-                // Não propaga a exceção para não afetar o fluxo principal
             }
         });
     }
 
-    /**
-     * Simula o envio do evento (para desenvolvimento/teste)
-     */
-    private void simularEnvioEvento(SimulacaoResponseDTO simulacaoResponse) {
-        try {
-            String eventoJson = objectMapper.writeValueAsString(criarEnvelopeEvento(simulacaoResponse));
-            
-            LOGGER.info("=== SIMULAÇÃO EVENT HUB ===");
-            LOGGER.info("Event Hub: " + eventHubName);
-            LOGGER.info("Evento JSON: " + eventoJson);
-            LOGGER.info("=== FIM SIMULAÇÃO ===");
-            
-            // Simular delay de rede
-            Thread.sleep(100);
-            
-        } catch (Exception e) {
-            LOGGER.warning("Erro na simulação do Event Hub: " + e.getMessage());
-        }
-    }
-
-    /**
-     * Envia evento real para o Azure Event Hub
-     */
-    private void enviarEventoReal(SimulacaoResponseDTO simulacaoResponse) throws Exception {
+    private void enviarEvento(SimulacaoResponseDTO simulacaoResponse) throws Exception {
         if (eventHubConnectionString.isEmpty()) {
             throw new IllegalStateException("Connection string do Event Hub não configurada");
         }
 
-        String eventoJson = objectMapper.writeValueAsString(criarEnvelopeEvento(simulacaoResponse));
+        String eventoJson = objectMapper.writeValueAsString(simulacaoResponse);
         
-        LOGGER.info("Enviando evento para Event Hub real: " + eventHubName);
+        LOGGER.info("Enviando evento para Event Hub: " + eventHubName);
         LOGGER.info("Tamanho do evento: " + eventoJson.length() + " bytes");
-        
-        // Implementação real com Azure Event Hub SDK
-        EventHubProducerClient producer = null;
+
         try {
-            LOGGER.info("=== ENVIANDO PARA EVENTHUB REAL ===");
+            LOGGER.info("=== ENVIANDO PARA EVENTHUB ===");
             LOGGER.info("Connection String: " + eventHubConnectionString.substring(0, 50) + "...");
             LOGGER.info("Event Hub Name: " + eventHubName);
             LOGGER.info("Evento JSON: " + eventoJson);
             LOGGER.info("Tamanho: " + eventoJson.length() + " bytes");
             
-            // Criar o cliente do Event Hub
-            producer = new EventHubClientBuilder()
-                .connectionString(eventHubConnectionString, eventHubName)
-                .buildProducerClient();
-            
-            // Criar o evento
             EventData eventData = new EventData(eventoJson);
+            producerClient.send(List.of(eventData));
             
-            // Enviar o evento
-            producer.send(java.util.Arrays.asList(eventData));
-            
-            LOGGER.info("Evento enviado com SUCESSO para EventHub REAL: " + eventHubName);
-            LOGGER.info("=== FIM ENVIO EVENTHUB REAL ===");
+            LOGGER.info("Evento enviado com SUCESSO para EventHub: " + eventHubName);
             
         } catch (Exception e) {
-            LOGGER.severe("Erro ao enviar evento para EventHub real: " + e.getMessage());
+            LOGGER.severe("Erro ao enviar evento para EventHub: " + e.getMessage());
             throw new RuntimeException("Falha no envio para EventHub", e);
-        } finally {
-            if (producer != null) {
-                try {
-                    producer.close();
-                } catch (Exception e) {
-                    LOGGER.warning("Erro ao fechar producer do EventHub: " + e.getMessage());
-                }
-            }
-        }
-    }
-
-    /**
-     * Cria o envelope do evento com metadados
-     */
-    private EventoSimulacao criarEnvelopeEvento(SimulacaoResponseDTO simulacaoResponse) {
-        return new EventoSimulacao(
-            "SIMULACAO_PROCESSADA",
-            System.currentTimeMillis(),
-            "simulacao-service",
-            "1.0",
-            simulacaoResponse
-        );
-    }
-
-    /**
-     * Classe para representar o envelope do evento
-     */
-    public static class EventoSimulacao {
-        public String tipoEvento;
-        public Long timestamp;
-        public String origem;
-        public String versao;
-        public SimulacaoResponseDTO dados;
-
-        public EventoSimulacao() {}
-
-        public EventoSimulacao(String tipoEvento, Long timestamp, String origem, String versao, SimulacaoResponseDTO dados) {
-            this.tipoEvento = tipoEvento;
-            this.timestamp = timestamp;
-            this.origem = origem;
-            this.versao = versao;
-            this.dados = dados;
         }
     }
 
@@ -194,8 +117,6 @@ public class EventHubService {
         public Long eventosEnviados;
         public Long eventosComErro;
         public Double tempoMedioEnvio;
-
-        public EventHubStats() {}
 
         public EventHubStats(boolean disponivel, Long eventosEnviados, Long eventosComErro, Double tempoMedioEnvio) {
             this.disponivel = disponivel;
