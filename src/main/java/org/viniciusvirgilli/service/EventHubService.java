@@ -28,10 +28,10 @@ public class EventHubService {
     @ConfigProperty(name = "eventhub.connection.string")
     String eventHubConnectionString;
 
-    @ConfigProperty(name = "eventhub.name", defaultValue = "simulacao-eventos")
+    @ConfigProperty(name = "eventhub.name")
     String eventHubName;
 
-    @ConfigProperty(name = "eventhub.enabled", defaultValue = "false")
+    @ConfigProperty(name = "eventhub.enabled")
     boolean eventHubEnabled;
 
     public EventHubService() {
