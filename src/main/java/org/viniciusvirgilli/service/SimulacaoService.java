@@ -24,7 +24,7 @@ public class SimulacaoService {
     ProdutoDao produtoDao;
     
     @Inject
-    CacheService cacheService;
+    ProdutoCacheService produtoCacheService;
 
     /**
      * Processa uma solicitação de simulação de empréstimo
@@ -34,19 +34,15 @@ public class SimulacaoService {
      */
     @Transactional
     public SimulacaoResponseDTO processarSimulacao(SimulacaoRequestDTO request) {
-        // 1. Validar dados de entrada
+
         validarDadosEntrada(request);
-        
-        // 2. Buscar produto compatível
+
         Produto produto = buscarProdutoCompativel(request.getValorDesejado(), request.getPrazo());
-        
-        // 3. Calcular simulações SAC e PRICE
+
         List<ResultadoSimulacaoDTO> resultados = calcularSimulacoes(request, produto);
-        
-        // 4. Gerar ID único para a simulação
+
         Long idSimulacao = gerarIdSimulacao();
-        
-        // 5. Montar resposta
+
         return new SimulacaoResponseDTO(
             idSimulacao,
             produto.codigoProduto,
@@ -56,9 +52,7 @@ public class SimulacaoService {
         );
     }
 
-    /**
-     * Valida os dados de entrada da simulação
-     */
+
     private void validarDadosEntrada(SimulacaoRequestDTO request) {
         if (request.getValorDesejado() == null || request.getValorDesejado().compareTo(BigDecimal.ZERO) <= 0) {
             throw new IllegalArgumentException("Valor desejado deve ser maior que zero");
@@ -69,26 +63,16 @@ public class SimulacaoService {
         }
     }
 
-    /**
-     * Busca produto compatível com os parâmetros da simulação
-     * Utiliza cache com atualização automática a cada minuto
-     */
     private Produto buscarProdutoCompativel(BigDecimal valorDesejado, Short prazo) {
-        // Buscar produtos que atendem aos critérios usando cache
-        List<Produto> produtosCompativeis = cacheService.buscarProdutosCompativeis(
-            valorDesejado, prazo
-        );
-        
-        if (produtosCompativeis.isEmpty()) {
-            throw new IllegalArgumentException(
-                "Nenhum produto disponível para o valor R$ " + valorDesejado + " e prazo de " + prazo + " meses"
-            );
-        }
-        
-        // Retornar o produto com menor taxa de juros
-        return produtosCompativeis.stream()
-            .min((p1, p2) -> p1.percentualTaxaJuros.compareTo(p2.percentualTaxaJuros))
-            .orElseThrow(() -> new IllegalArgumentException("Erro ao selecionar produto"));
+        List<Produto> produtos = produtoCacheService.findAllProdutos();
+
+        return produtos.stream()
+                .filter(produto -> valorDesejado.compareTo(produto.getValorMinimo()) >= 0 &&
+                                (produto.getValorMaximo() == null || valorDesejado.compareTo(produto.getValorMaximo()) <= 0))
+                .filter(produto -> prazo >= produto.getNumeroMinimoMeses() &&
+                                (produto.getNumeroMaximoMeses() == null || prazo <= produto.getNumeroMaximoMeses()))
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("Nenhum produto disponível para o valor " + valorDesejado + " e prazo " + prazo));
     }
 
     /**

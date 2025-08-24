@@ -19,7 +19,6 @@ public class EventHubConfig {
     @ApplicationScoped
     public EventHubProducerClient eventHubProducerClient() {
         if (!eventHubEnabled) {
-            // Retorna um cliente mock ou null quando desabilitado
             return null;
         }
         
