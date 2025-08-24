@@ -129,7 +129,7 @@ public class ListagemController {
             
             var simulacao = persistenciaService.buscarSimulacaoPorId(idSimulacao);
             
-            LOGGER.info("Simulação encontrada: " + simulacao.getId());
+            LOGGER.info("Simulação encontrada: " + simulacao.getIdSimulacao());
             
             return Response.ok(simulacao).build();
             

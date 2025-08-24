@@ -13,7 +13,6 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
 import java.util.logging.Logger;
 
 /**
@@ -26,50 +25,6 @@ public class PersistenciaService {
 
     @Inject
     SimulacaoRealizadaDao simulacaoRepository;
-
-    /**
-     * Persiste uma simulação realizada no banco local de forma assíncrona
-     *
-     * @param request dados da requisição
-     * @param response dados da resposta
-     */
-    public void persistirSimulacao(SimulacaoRequestDTO request, SimulacaoResponseDTO response) {
-        CompletableFuture.runAsync(() -> {
-            try {
-                persistirSimulacaoSync(request, response);
-            } catch (Exception e) {
-                LOGGER.severe("Erro ao persistir simulação: " + e.getMessage());
-                throw new RuntimeException("Falha na persistência", e);
-            }
-        });
-    }
-
-    /**
-     * Persiste uma simulação de forma síncrona
-     */
-    @Transactional
-    public void persistirSimulacaoSync(SimulacaoRequestDTO request, SimulacaoResponseDTO response) {
-        try {
-            SimulacaoRealizada simulacao = new SimulacaoRealizada(
-                response.getIdSimulacao(),
-                response.getCodigoProduto(),
-                response.getDescricaoProduto(),
-                request.getValorDesejado(),
-                request.getPrazo(),
-                response.getTaxaJuros(),
-                calcularValorTotalParcelas(response, TipoSimulacao.SAC),
-                calcularValorTotalParcelas(response, TipoSimulacao.PRICE),
-                LocalDateTime.now()
-            );
-
-            simulacaoRepository.persist(simulacao);
-            LOGGER.info("Simulação persistida com ID: " + simulacao.getId());
-
-        } catch (Exception e) {
-            LOGGER.severe("Erro ao persistir simulação no banco: " + e.getMessage());
-            throw e;
-        }
-    }
 
     /**
      * Busca todas as simulações realizadas com paginação
@@ -190,7 +145,7 @@ public class PersistenciaService {
      * Calcula o valor total das parcelas SAC
      */
     private BigDecimal calcularValorTotalParcelas(SimulacaoResponseDTO response, TipoSimulacao tipo) {
-        ResultadoSimulacaoDTO resultadoSimulacao = response.getResultadosSimulacao().stream()
+        SimulacaoPorSistemaDTO resultadoSimulacao = response.getResultadosSimulacao().stream()
             .filter(resultado -> resultado.getTipo() == tipo)
             .findFirst()
             .orElse(null);
@@ -206,13 +161,12 @@ public class PersistenciaService {
      * Converte SimulacaoRealizada para SimulacaoResumoDTO
      */
     private SimulacaoResumoDTO converterParaResumo(SimulacaoRealizada simulacao) {
-        return new SimulacaoResumoDTO(
-            simulacao.getIdSimulacao(),
-            simulacao.getValorDesejado(),
-            simulacao.getPrazoMeses(),
-            simulacao.getValorTotalSAC(),
-            simulacao.getValorTotalPRICE()
-        );
+        return SimulacaoResumoDTO.builder()
+                .idSimulacao(simulacao.getIdSimulacao())
+                .valorDesejado(simulacao.getValorDesejado())
+                .prazo(simulacao.getPrazo())
+                .valorTotalParcelas(simulacao.getValorTotalPRICE())
+                .build();
     }
 
     /**

@@ -5,6 +5,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
 import io.quarkus.hibernate.orm.PersistenceUnit;
+import jakarta.transaction.Transactional;
 import org.viniciusvirgilli.model.local.SimulacaoRealizada;
 
 import java.time.LocalDate;
@@ -19,7 +20,16 @@ public class SimulacaoRealizadaDao {
     @PersistenceUnit("local")
     EntityManager local;
 
-    // Métodos básicos de persistência
+    @Transactional
+    public SimulacaoRealizada salvar(SimulacaoRealizada simulacaoRealizada) {
+        if (simulacaoRealizada.getIdSimulacao() == null) {
+            local.persist(simulacaoRealizada);
+        } else {
+            simulacaoRealizada = local.merge(simulacaoRealizada);
+        }
+        return simulacaoRealizada;
+    }
+
     public void persist(SimulacaoRealizada entity) {
         local.persist(entity);
     }

@@ -5,18 +5,16 @@ import jakarta.validation.Valid;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import lombok.extern.slf4j.Slf4j;
 import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.eclipse.microprofile.openapi.annotations.media.Content;
 import org.eclipse.microprofile.openapi.annotations.media.Schema;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.viniciusvirgilli.dto.SimulacaoRequestDTO;
 import org.viniciusvirgilli.dto.SimulacaoResponseDTO;
-import org.viniciusvirgilli.service.SimulacaoService;
-import org.viniciusvirgilli.service.EventHubService;
-import org.viniciusvirgilli.service.PersistenciaService;
+import org.viniciusvirgilli.exceptions.APIEmprestimoAgoraException;
+import org.viniciusvirgilli.service.ProcessaSimulacaoService;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
 import io.micrometer.core.instrument.Counter;
@@ -25,21 +23,14 @@ import io.micrometer.core.instrument.Counter;
  * Controller REST para operações de simulação de empréstimo
  */
 @Path("/api/simulacao")
+@Slf4j
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 @Tag(name = "Simulação", description = "Operações de simulação de empréstimo")
 public class SimulacaoController {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(SimulacaoController.class);
-
     @Inject
-    SimulacaoService simulacaoService;
-
-    @Inject
-    EventHubService eventHubService;
-
-    @Inject
-    PersistenciaService persistenciaService;
+    ProcessaSimulacaoService processaSimulacaoService;
 
     @Inject
     MeterRegistry meterRegistry;
@@ -102,64 +93,40 @@ public class SimulacaoController {
         responseCode = "500",
         description = "Erro interno do servidor ou erro de persistência no banco de dados"
     )
-    public Response processarSimulacao(@Valid SimulacaoRequestDTO request) {
+    public Response processarSimulacao(@Valid SimulacaoRequestDTO requestDTO) throws Exception {
+        long inicio = System.currentTimeMillis();
 
         simulacaoRequestCounter.increment();
         Timer.Sample sample = Timer.start(meterRegistry);
 
         try {
-            LOGGER.info(" [REQUISICAO][SIMULACAO] - Iniciando requisicao de simulacao de emprestimo para {} com prazo de {} meses.", request.getValorDesejado(), request.getPrazo());
+            log.info(" [REQUISICAO][SIMULACAO] - Iniciando requisicao de simulacao: {}", requestDTO.toString());
 
-            SimulacaoResponseDTO response = simulacaoService.processarSimulacao(request);
-
-            persistenciaService.persistirSimulacao(request, response);
-
-            eventHubService.enviarEventoSimulacao(response);
+            SimulacaoResponseDTO simulacao = processaSimulacaoService.executar(requestDTO);
 
             simulacaoSuccessCounter.increment();
             sample.stop(simulacaoTimer);
 
-            LOGGER.info(" [REQUISICAO][SIMULACAO] - Finalizando requisicao de simulacao de emprestimo para {} com prazo de {} meses.\n", request.getValorDesejado(), request.getPrazo());
-            return Response.ok(response).build();
+            long tempoExecucao = System.currentTimeMillis() - inicio;
+            log.info(" [REQUISICAO][SIMULACAO] - Finalizando requisicao de simulacao com ID: {} em {}ms\n", simulacao.getIdSimulacao(), tempoExecucao);
+
+            return Response.ok(simulacao).build();
             
-        } catch (IllegalArgumentException e) {
-            LOGGER.warn("Erro de validação: " + e.getMessage());
-            
-            // Incrementar contador de erro
+        } catch (APIEmprestimoAgoraException e) {
+            log.warn("[REQUISICAO][SIMULACAO] - Erro na requisicao: " + e.getMessage() + System.lineSeparator());
+
             simulacaoErrorCounter.increment();
-            
-            // Registrar tempo de resposta para requisições com erro
             sample.stop(simulacaoTimer);
             
-            return Response.status(Response.Status.BAD_REQUEST)
-                .entity(new ErrorResponse("VALIDATION_ERROR", e.getMessage()))
-                .build();
-                
-        } catch (jakarta.persistence.PersistenceException e) {
-            LOGGER.error("Erro ao persistir simulação no banco de dados: " + e.getMessage());
-            
-            // Incrementar contador de erro
-            simulacaoErrorCounter.increment();
-            
-            // Registrar tempo de resposta para requisições com erro
-            sample.stop(simulacaoTimer);
-            
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                .entity(new ErrorResponse("PERSISTENCE_ERROR", "Erro ao salvar simulação no banco de dados"))
-                .build();
+            throw new APIEmprestimoAgoraException(e.getMessage());
                 
         } catch (Exception e) {
-            LOGGER.error("Erro interno ao processar simulação: " + e.getMessage());
-            
-            // Incrementar contador de erro
+            log.warn("[REQUISICAO][SIMULACAO] - Erro na requisicao" + e.getMessage() + System.lineSeparator());
+
             simulacaoErrorCounter.increment();
-            
-            // Registrar tempo de resposta para requisições com erro
             sample.stop(simulacaoTimer);
-            
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                .entity(new ErrorResponse("INTERNAL_ERROR", "Erro interno do servidor"))
-                .build();
+
+            throw new Exception(e.getMessage());
         }
     }
 
