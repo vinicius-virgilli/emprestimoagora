@@ -38,22 +38,22 @@ public class SimulacaoRealizada {
 
     @NotNull
     @Positive
-    @Column(name = "taxa_juros")
+    @Column(name = "taxa_juros", precision = 10, scale = 9)
     private BigDecimal taxaJuros;
 
     @NotNull
     @Positive
-    @Column(name = "valor_desejado")
+    @Column(name = "valor_desejado", precision = 18, scale = 2)
     private BigDecimal valorDesejado;
 
     @NotNull
     @Positive
-    @Column(name = "valor_total_sac")
+    @Column(name = "valor_total_sac", precision = 18, scale = 2)
     private BigDecimal valorTotalSAC;
 
     @NotNull
     @Positive
-    @Column(name = "valor_total_price")
+    @Column(name = "valor_total_price", precision = 18, scale = 2)
     private BigDecimal valorTotalPRICE;
 
     @NotNull

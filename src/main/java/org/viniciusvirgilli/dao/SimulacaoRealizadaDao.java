@@ -266,24 +266,21 @@ public class SimulacaoRealizadaDao {
     }
 
     public ListagemSimulacoesResponseDTO buscaPaginada(Integer pagina, Integer tamanhoPagina, TipoSimulacao tipoEmprestimo) {
-        // Monta a query base
+
         String jpql = "SELECT s FROM SimulacaoRealizada s";
         String countJpql = "SELECT COUNT(s) FROM SimulacaoRealizada s";
 
         jpql += " ORDER BY s.idSimulacao ASC";
 
-        // Cria a query de busca paginada
         TypedQuery<SimulacaoRealizada> query = local.createQuery(jpql, SimulacaoRealizada.class);
         TypedQuery<Long> countQuery = local.createQuery(countJpql, Long.class);
 
-        // Aplica paginação
         query.setFirstResult(pagina * tamanhoPagina)
                 .setMaxResults(tamanhoPagina);
 
         List<SimulacaoRealizada> simulacoes = query.getResultList();
         long totalRegistros = countQuery.getSingleResult();
 
-        // Converte para DTO
         List<SimulacaoResumoDTO> resumos = simulacoes.stream()
                 .map(simulacao -> SimulacaoResumoDTO.builder()
                         .idSimulacao(simulacao.getIdSimulacao())
@@ -294,7 +291,6 @@ public class SimulacaoRealizadaDao {
                         .build())
                 .toList();
 
-        // Retorna o DTO de resposta
         return ListagemSimulacoesResponseDTO.builder()
                 .pagina(pagina)
                 .qtdRegistros(Math.toIntExact(totalRegistros))
@@ -303,5 +299,18 @@ public class SimulacaoRealizadaDao {
                 .build();
     }
 
+    public List<SimulacaoRealizada> findVolumePorProdutoPorDia(LocalDate date, int codigoProduto) {
+    // ✅ CORREÇÃO: Converter LocalDate para LocalDateTime e usar intervalo
+    LocalDateTime inicioDia = date.atStartOfDay();
+    LocalDateTime fimDia = date.plusDays(1).atStartOfDay();
 
+    return local.createQuery(
+            "SELECT s FROM SimulacaoRealizada s WHERE s.dataSimulacao >= :inicioDia AND s.dataSimulacao < :fimDia AND s.codigoProduto = :codigoProduto",
+            SimulacaoRealizada.class
+    )
+            .setParameter("inicioDia", inicioDia)
+            .setParameter("fimDia", fimDia)
+            .setParameter("codigoProduto", codigoProduto)
+            .getResultList();
+}
 }

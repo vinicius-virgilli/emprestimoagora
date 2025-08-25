@@ -85,27 +85,6 @@
 //                LOGGER.info("Dados de telemetria simulados obtidos (fallback)");
 //            }
 //
-//            // Adicionar estatísticas do Event Hub
-//            try {
-//                EventHubService.EventHubStats eventHubStats = eventHubService.obterEstatisticas();
-//                LOGGER.info("Estatísticas do EventHub obtidas: " + eventHubStats);
-//
-//                // Enriquecer com dados do Event Hub
-//                telemetria.getListaEndpoints().add(new TelemetriaEndpointDTO(
-//                    "event-hub",
-//                    eventHubStats.eventosEnviados != null ? eventHubStats.eventosEnviados.intValue() : 0,
-//                    eventHubStats.tempoMedioEnvio != null ? eventHubStats.tempoMedioEnvio.intValue() : 0,
-//                    50, // tempo mínimo simulado
-//                    200, // tempo máximo simulado
-//                    java.math.BigDecimal.valueOf(0.95) // percentual de sucesso simulado
-//                ));
-//                LOGGER.info("Dados do EventHub adicionados à telemetria");
-//            } catch (Exception eventHubError) {
-//                LOGGER.warning("Erro ao obter estatísticas do EventHub: " + eventHubError.getMessage());
-//                eventHubError.printStackTrace();
-//                // Continuar sem os dados do EventHub
-//            }
-//
 //            long endTime = System.currentTimeMillis();
 //            long tempoResposta = endTime - startTime;
 //
@@ -235,11 +214,6 @@
 //            performance.percentualUsoMemoria = (double) memoriaUsada / memoriaTotal * 100;
 //            performance.processadoresDisponiveis = runtime.availableProcessors();
 //
-//            // Adicionar estatísticas do Event Hub
-//            EventHubService.EventHubStats eventHubStats = eventHubService.obterEstatisticas();
-//            performance.eventHubEventosEnviados = eventHubStats.eventosEnviados != null ? eventHubStats.eventosEnviados : 0L;
-//            performance.eventHubTempoMedio = eventHubStats.tempoMedioEnvio != null ? eventHubStats.tempoMedioEnvio : 0.0;
-//            performance.eventHubErros = eventHubStats.eventosComErro != null ? eventHubStats.eventosComErro : 0L;
 //
 //            LOGGER.info(String.format("Performance consultada - Memória: %.1f%% usada",
 //                performance.percentualUsoMemoria));
@@ -267,7 +241,6 @@
 //        try {
 //            // Fazer uma consulta simples para verificar conectividade
 //            persistenciaService.buscarTelemetria(LocalDate.now());
-//            eventHubService.obterEstatisticas();
 //
 //            return Response.ok(new HealthResponse("OK", "Serviço de telemetria funcionando")).build();
 //

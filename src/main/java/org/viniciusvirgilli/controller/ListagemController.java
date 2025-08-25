@@ -13,7 +13,6 @@ import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 import org.viniciusvirgilli.dto.ListagemSimulacoesResponseDTO;
 import org.viniciusvirgilli.enums.TipoSimulacao;
-import org.viniciusvirgilli.service.PersistenciaService;
 import org.viniciusvirgilli.service.ProcessaSimulacaoService;
 
 import java.util.logging.Logger;

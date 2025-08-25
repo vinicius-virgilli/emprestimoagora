@@ -20,6 +20,8 @@ import org.viniciusvirgilli.validator.RequestListagemValidador;
 import org.viniciusvirgilli.validator.RequestSimulacaoValidator;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -202,4 +204,89 @@ public class ProcessaSimulacaoService {
 
         return resultados;
     }
+
+    public VolumeDiarioResponseDTO buscarVolumePorProdutoPorDia(LocalDate data, Integer codigoProduto, TipoSimulacao tipoSimulacao) {
+        List<SimulacaoRealizada> simulacoesPorDiaProduto = simulacaoRealizadaDao.findVolumePorProdutoPorDia(data, codigoProduto);
+    
+        if (simulacoesPorDiaProduto.isEmpty()) {
+            return VolumeDiarioResponseDTO.builder()
+                .dataReferencia(data)
+                .simulacoes(List.of())
+                .build();
+        }
+
+        BigDecimal taxaMediaJuros = calculaTaxaMediaJuros(simulacoesPorDiaProduto);
+        BigDecimal valorMedioPrestacao = calculaValorMedioPrestacao(simulacoesPorDiaProduto, tipoSimulacao);
+        BigDecimal valorTotalDesejado = calculaTotalDesejado(simulacoesPorDiaProduto);
+        BigDecimal valorTotalCredito = calculaValorTotalCredito(simulacoesPorDiaProduto, tipoSimulacao);
+
+        SimulacaoRealizada primeiraSimulacao = simulacoesPorDiaProduto.get(0);
+
+        VolumeSimuladoDTO volumeSimulado = VolumeSimuladoDTO.builder()
+            .codigoProduto(primeiraSimulacao.getCodigoProduto())
+            .descricaoProduto(primeiraSimulacao.getDescricaoProduto())
+            .taxaMediaJuros(taxaMediaJuros)
+            .valorMedioPrestacao(valorMedioPrestacao)
+            .valorTotalDesejado(valorTotalDesejado)
+            .valorTotalCredito(valorTotalCredito)
+            .build();
+
+        return VolumeDiarioResponseDTO.builder()
+            .dataReferencia(data)
+            .simulacoes(List.of(volumeSimulado))
+            .build();
+    }
+
+    private BigDecimal calculaTaxaMediaJuros(List<SimulacaoRealizada> simulacoes) {
+        BigDecimal resultado = simulacoes.stream()
+                .map(SimulacaoRealizada::getTaxaJuros)
+                .reduce(BigDecimal.ZERO, BigDecimal::add)
+                .divide(new BigDecimal(simulacoes.size()), 9, RoundingMode.HALF_UP);
+        
+        log.info("Taxa média calculada: {}", resultado.toPlainString());
+        return resultado;
+    }
+
+    private BigDecimal calculaValorMedioPrestacao(List<SimulacaoRealizada> simulacoes, TipoSimulacao tipoSimulacao) {
+        if (simulacoes == null || simulacoes.isEmpty()) {
+            return BigDecimal.ZERO;
+        }
+        
+        BigDecimal somaValoresMediosPrestacao = simulacoes.stream()
+            .map(simulacao -> {
+                BigDecimal valorTotal = tipoSimulacao == TipoSimulacao.SAC 
+                    ? simulacao.getValorTotalSAC() 
+                    : simulacao.getValorTotalPRICE();
+                
+                return valorTotal.divide(new BigDecimal(simulacao.getPrazo()), 2, RoundingMode.HALF_UP);
+            })
+            .reduce(BigDecimal.ZERO, BigDecimal::add);
+        
+        return somaValoresMediosPrestacao.divide(
+            new BigDecimal(simulacoes.size()), 
+            2, 
+            RoundingMode.HALF_UP
+        );
+    }
+
+    private BigDecimal calculaValorTotalCredito(List<SimulacaoRealizada> simulacoes, TipoSimulacao tipoSimulacao) {
+        if (simulacoes == null || simulacoes.isEmpty()) {
+            return BigDecimal.ZERO;
+        }
+        
+        return simulacoes.stream()
+            .map(simulacao -> {
+                return tipoSimulacao == TipoSimulacao.SAC 
+                    ? simulacao.getValorTotalSAC() 
+                    : simulacao.getValorTotalPRICE();
+            })
+            .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
+    private BigDecimal calculaTotalDesejado(List<SimulacaoRealizada> simulacoes) {
+        return simulacoes.stream()
+            .map(SimulacaoRealizada::getValorDesejado)
+            .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
 }
