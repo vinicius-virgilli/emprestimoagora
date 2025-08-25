@@ -6,12 +6,18 @@ import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
+import lombok.*;
 
 import java.util.List;
 
 /**
  * DTO de resposta para listagem paginada de simulações
  */
+@Setter
+@Getter
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class ListagemSimulacoesResponseDTO {
 
     /**
@@ -47,63 +53,4 @@ public class ListagemSimulacoesResponseDTO {
     @Valid
     private List<SimulacaoResumoDTO> registros;
 
-    /**
-     * Construtor padrão
-     */
-    public ListagemSimulacoesResponseDTO() {
-    }
-
-    /**
-     * Construtor completo
-     */
-    public ListagemSimulacoesResponseDTO(Integer pagina, Integer qtdRegistros, Integer qtdRegistrosPagina,
-                                        List<SimulacaoResumoDTO> registros) {
-        this.pagina = pagina;
-        this.qtdRegistros = qtdRegistros;
-        this.qtdRegistrosPagina = qtdRegistrosPagina;
-        this.registros = registros;
-    }
-
-    // Getters e Setters
-    public Integer getPagina() {
-        return pagina;
-    }
-
-    public void setPagina(Integer pagina) {
-        this.pagina = pagina;
-    }
-
-    public Integer getQtdRegistros() {
-        return qtdRegistros;
-    }
-
-    public void setQtdRegistros(Integer qtdRegistros) {
-        this.qtdRegistros = qtdRegistros;
-    }
-
-    public Integer getQtdRegistrosPagina() {
-        return qtdRegistrosPagina;
-    }
-
-    public void setQtdRegistrosPagina(Integer qtdRegistrosPagina) {
-        this.qtdRegistrosPagina = qtdRegistrosPagina;
-    }
-
-    public List<SimulacaoResumoDTO> getRegistros() {
-        return registros;
-    }
-
-    public void setRegistros(List<SimulacaoResumoDTO> registros) {
-        this.registros = registros;
-    }
-
-    @Override
-    public String toString() {
-        return "ListagemSimulacoesResponseDTO{" +
-                "pagina=" + pagina +
-                ", qtdRegistros=" + qtdRegistros +
-                ", qtdRegistrosPagina=" + qtdRegistrosPagina +
-                ", registros=" + registros +
-                '}';
-    }
 }

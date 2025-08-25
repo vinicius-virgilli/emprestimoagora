@@ -17,6 +17,5 @@ public class ErroDetailDto {
      private Date timestamp;
 
      private int status;
-     private String cause;
      private String message;
 }

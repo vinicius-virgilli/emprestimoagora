@@ -87,7 +87,7 @@ public class SimulacaoController {
     )
     @APIResponse(
         responseCode = "404",
-        description = "Nenhum produto disponível para os parâmetros informados"
+        description = "Nenhum produto disponivel para os parâmetros informados"
     )
     @APIResponse(
         responseCode = "500",
@@ -112,21 +112,21 @@ public class SimulacaoController {
 
             return Response.ok(simulacao).build();
             
-        } catch (APIEmprestimoAgoraException e) {
-            log.warn("[REQUISICAO][SIMULACAO] - Erro na requisicao: " + e.getMessage() + System.lineSeparator());
+        } catch (APIEmprestimoAgoraException exception) {
+            log.warn("[REQUISICAO][SIMULACAO] - Erro na requisicao" + exception.getMessage() + System.lineSeparator());
 
             simulacaoErrorCounter.increment();
             sample.stop(simulacaoTimer);
             
-            throw new APIEmprestimoAgoraException(e.getMessage());
+            throw exception;
                 
         } catch (Exception e) {
-            log.warn("[REQUISICAO][SIMULACAO] - Erro na requisicao" + e.getMessage() + System.lineSeparator());
+            log.warn("[REQUISICAO][SIMULACAO] - Erro na requisicao: " + e.getMessage() + System.lineSeparator());
 
             simulacaoErrorCounter.increment();
             sample.stop(simulacaoTimer);
 
-            throw new Exception(e.getMessage());
+            throw e;
         }
     }
 

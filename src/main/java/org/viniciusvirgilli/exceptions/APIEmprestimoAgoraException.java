@@ -7,7 +7,6 @@ import lombok.*;
 @Getter
 @Setter
 @ToString
-@AllArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class APIEmprestimoAgoraException extends RuntimeException {
 
@@ -21,6 +20,11 @@ public class APIEmprestimoAgoraException extends RuntimeException {
 
     public APIEmprestimoAgoraException(String mensagem, Throwable causa) {
         super(mensagem, causa);
+    }
+
+    public APIEmprestimoAgoraException(int codigoHTTP, String mensagem) {
+        super(mensagem);
+        this.codigoHTTP = codigoHTTP;
     }
 
 }

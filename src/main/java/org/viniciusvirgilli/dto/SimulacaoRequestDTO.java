@@ -28,7 +28,7 @@ public class SimulacaoRequestDTO {
     @Positive(message = "{solicita_simulacao_emprestimo_prazo_menor_que_zero}")
     private Short prazo;
 
-    @Max(value = 140, message = "{solicita_simulacao_emprestimo_nome_cliente_maior_que_o_permitido}")
+    @Size(max = 140, message = "{solicita_simulacao_emprestimo_nome_cliente_maior_que_o_permitido}")
     private String nomeCliente;
 
     @CPF

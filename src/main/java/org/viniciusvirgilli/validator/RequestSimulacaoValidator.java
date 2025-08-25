@@ -2,65 +2,81 @@ package org.viniciusvirgilli.validator;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import lombok.extern.slf4j.Slf4j;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.viniciusvirgilli.dto.CamposComProblemasDTO;
 import org.viniciusvirgilli.dto.SimulacaoRequestDTO;
-import org.viniciusvirgilli.exceptions.APIEmprestimoAgoraException;
+import org.viniciusvirgilli.exceptions.ValidadorException;
 import org.viniciusvirgilli.util.MessageUtils;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 
 @ApplicationScoped
 @Slf4j
 public class RequestSimulacaoValidator {
 
+    Integer nomeClienteTamanhoMaximo = 140;
+
     public void validaRequestSimulacao(SimulacaoRequestDTO dto) {
         long inicio = System.currentTimeMillis();
 
-        StringBuilder campos = new StringBuilder();
+        List<String> campos = new ArrayList<>();
 
-        // validaValorDesejado(dto.getValorDesejado(), campos);
+        validaValorDesejado(dto.getValorDesejado(), campos);
         validaPrazo(dto.getPrazo(), campos);
-        // validaNomeCliente(dto.getNomeCliente(), campos);
-        // validaCpfCliente(dto.getCpfCliente(), campos);
+        validaNomeCliente(dto.getNomeCliente(), campos);
+        validaCpfCliente(dto.getCpfCliente(), campos);
 
         if (!campos.isEmpty()) {
-            log.error("[VALIDADOR] - validacao realizada com problemas");
-            throw new APIEmprestimoAgoraException(
-                    MessageUtils.getString("solicita_simulacao_emprestimo_campos_com_problemas") + " " + campos);
+            CamposComProblemasDTO problemasDTO = CamposComProblemasDTO.of(campos);
+
+            log.error("[VALIDADOR] - validacao detectou problemas: {}", problemasDTO.toString());
+            
+            throw new ValidadorException(problemasDTO);
         }
 
         long tempoTotal = System.currentTimeMillis() - inicio;
         log.info("[PASSO 1][VALIDADOR] - validacao realizada com sucesso em {}ms", tempoTotal);
     }
 
-//    private void validaValorDesejado(BigDecimal valorDesejado, StringBuilder campos) {
-//        if (valorDesejado == null) {
-//            campos.append(System.lineSeparator());
-//            campos.append(MessageUtils.getString("solicita_simulacao_emprestimo_valor_desejado_nulo"));
-//        } else if (valorDesejado.compareTo(BigDecimal.ZERO) <= 0) {
-//            campos.append(MessageUtils.getString("solicita_simulacao_emprestimo_valor_desejado_menor_que_zero"));
-//        }
-//    }
-
-    private void validaPrazo(Short prazo, StringBuilder campos) {
-//        if (prazo == null) {
-//            campos.append(MessageUtils.getString("solicita_simulacao_emprestimo_prazo_nulo"));
-//        } else if (prazo <= 0) {
-//            campos.append(MessageUtils.getString("solicita_simulacao_emprestimo_prazo_menor_que_zero"));
-//        }
-        if (prazo != null && prazo % 1 != 0) {
-            campos.append(MessageUtils.getString("solicita_simulacao_emprestimo_prazo_nao_inteiro"));
+    private void validaValorDesejado(BigDecimal valorDesejado, List<String> campos) {
+        if (valorDesejado == null) {
+            campos.add(MessageUtils.getString("solicita_simulacao_emprestimo_valor_desejado_nulo"));
+            return;
+        } else if (!valorDesejado.toString().matches("^\\d+(\\.\\d{1,2})?$")) {
+            campos.add(MessageUtils.getString("solicita_simulacao_emprestimo_valor_desejado_tipo_invalido"));
+        }
+        if (valorDesejado.compareTo(BigDecimal.ZERO) <= 0) {
+            campos.add(MessageUtils.getString("solicita_simulacao_emprestimo_valor_desejado_menor_que_zero"));
         }
     }
 
-//    private void validaNomeCliente(String nomeCliente, StringBuilder campos) {
-//        if (nomeCliente != null && nomeCliente.length() > 140) {
-//            campos.append(MessageUtils.getString("solicita_simulacao_emprestimo_nome_cliente_maior_que_o_permitido"));
-//        }
-//    }
-//
-//    private void validaCpfCliente(String cpf, StringBuilder campos) {
-//        if (cpf == null || !cpf.matches("\\d{11}")) {
-//            campos.append(MessageUtils.getString("solicita_simulacao_emprestimo_cpf_cliente_formato_invalido"));
-//        }
-//    }
+    private void validaPrazo(Short prazo, List<String> campos) {
+        if (prazo == null) {
+            campos.add(MessageUtils.getString("solicita_simulacao_emprestimo_prazo_nulo"));
+            return;
+        }
+        if (prazo <= 0) {
+            campos.add(MessageUtils.getString("solicita_simulacao_emprestimo_prazo_menor_que_zero"));
+        }
+    }
+
+    private void validaNomeCliente(String nomeCliente, List<String> campos) {
+        if (nomeCliente != null && nomeCliente.length() > nomeClienteTamanhoMaximo) {
+            campos.add(MessageUtils.getString("solicita_simulacao_emprestimo_nome_cliente_maior_que_o_permitido"));
+        }
+        if (nomeCliente != null && !nomeCliente.matches("^[\\p{L}\\s]+$")) {
+            campos.add(MessageUtils.getString("solicita_simulacao_emprestimo_nome_cliente_tipo_invalido"));
+        }
+    }
+
+    private void validaCpfCliente(String cpf, List<String> campos) {
+        if (cpf == null) {
+            return;
+        }
+        if (!cpf.matches("\\d{11}")) {
+            campos.add(MessageUtils.getString("solicita_simulacao_emprestimo_cpf_cliente_formato_invalido"));
+        }
+    }
 }

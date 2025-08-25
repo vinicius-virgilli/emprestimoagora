@@ -1,7 +1,5 @@
 package org.viniciusvirgilli.service;
 
-import io.quarkus.arc.Arc;
-import io.quarkus.arc.ManagedContext;
 import io.smallrye.context.api.ManagedExecutorConfig;
 import io.smallrye.context.api.NamedInstance;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -18,12 +16,12 @@ import org.viniciusvirgilli.enums.TipoSimulacao;
 import org.viniciusvirgilli.dao.ProdutoDao;
 import org.viniciusvirgilli.model.local.SimulacaoRealizada;
 import org.viniciusvirgilli.util.CalculadoraUtil;
+import org.viniciusvirgilli.validator.RequestListagemValidador;
 import org.viniciusvirgilli.validator.RequestSimulacaoValidator;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 /**
  * Serviço responsável pela lógica de negócio das simulações de empréstimo
@@ -43,6 +41,9 @@ public class ProcessaSimulacaoService {
 
     @Inject
     RequestSimulacaoValidator validator;
+
+    @Inject
+    RequestListagemValidador requestListagemValidador;
 
     @Inject
     SimulacaoRealizadaDao simulacaoRealizadaDao;
@@ -83,10 +84,11 @@ public class ProcessaSimulacaoService {
                 eventHubService.enviarEventoSimulacao(simulacaoResponseDTO);
 
                 long tempoExecucao = System.currentTimeMillis() - inicio;
-                log.info("[PASSO 5][ENVIAR EVENT HUB] - Enviou simulacao para o Event Hub em {} ms", tempoExecucao);
+                log.info("[PASSO 5][ENVIAR EVENT HUB] - Enviou simulacao de ID: {} para o Event Hub em {}ms\n", simulacaoResponseDTO.getIdSimulacao(), tempoExecucao);
 
             } catch (Exception e) {
                 log.error("[ERRO][EVENT HUB] - Erro ao enviar simulacao para o Event Hub", e);
+                throw new APIEmprestimoAgoraException("[ERRO][EVENT HUB] - Erro ao enviar simulacao para o Event Hub", e);
             }
         }).exceptionally(ex -> {
             log.error("[ERRO][EVENT HUB] - Excecao assincrona nao tratada", ex);
@@ -149,7 +151,7 @@ public class ProcessaSimulacaoService {
                 .filter(produto -> prazo >= produto.getNumeroMinimoMeses() &&
                         (produto.getNumeroMaximoMeses() == null || prazo <= produto.getNumeroMaximoMeses()))
                 .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException("Nenhum produto disponível para o valor " + valorDesejado + " e prazo " + prazo));
+                .orElseThrow(() -> new IllegalArgumentException("Nenhum produto disponivel para o valor " + valorDesejado + " e prazo " + prazo));
 
         long tempoExecucao = System.currentTimeMillis() - inicio;
         log.info("[PASSO 2][BUSCAR PRODUTO COMPATIVEL] - Buscou produto compativel em {}ms", tempoExecucao);
@@ -173,6 +175,30 @@ public class ProcessaSimulacaoService {
 
         long tempoExecucao = System.currentTimeMillis() - inicio;
         log.info("[PASSO 3][CALCULO SIMULACOES] - Calculou simulacoes em {}ms", tempoExecucao);
+
+        return resultados;
+    }
+
+    public ListagemSimulacoesResponseDTO buscaPaginada(Integer pagina, Integer tamanhoPagina, TipoSimulacao tipoEmprestimo) {
+        requestListagemValidador.validaRequestListagem(pagina, tamanhoPagina, tipoEmprestimo);
+
+        return buscarSimulacoesPaginada(pagina, tamanhoPagina, tipoEmprestimo.name());
+    }
+
+    private ListagemSimulacoesResponseDTO buscarSimulacoesPaginada(Integer pagina, Integer tamanhoPagina, String tipoEmprestimo) {
+        long inicio = System.currentTimeMillis();
+
+        ListagemSimulacoesResponseDTO resultados = new ListagemSimulacoesResponseDTO();
+        
+        // compara com o enum TipoEmprestimo SAC
+        if (TipoSimulacao.SAC.name().equals(tipoEmprestimo)) {
+            resultados = simulacaoRealizadaDao.buscaPaginada(pagina, tamanhoPagina, TipoSimulacao.SAC);
+        } else if (TipoSimulacao.PRICE.name().equals(tipoEmprestimo)) {
+            resultados = simulacaoRealizadaDao.buscaPaginada(pagina, tamanhoPagina, TipoSimulacao.PRICE);
+        }
+
+        long tempoExecucao = System.currentTimeMillis() - inicio;
+        log.info("[BANCO] - Buscou simulacoes paginadas em {}ms", tempoExecucao);
 
         return resultados;
     }

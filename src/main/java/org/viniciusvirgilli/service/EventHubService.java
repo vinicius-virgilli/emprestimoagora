@@ -5,8 +5,8 @@ import com.azure.messaging.eventhubs.EventHubProducerClient;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import lombok.extern.slf4j.Slf4j;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
-import org.jboss.logging.Logger;
 import org.viniciusvirgilli.dto.SimulacaoResponseDTO;
 import org.viniciusvirgilli.exceptions.APIEmprestimoAgoraException;
 
@@ -16,9 +16,8 @@ import java.util.List;
  * Serviço para integração com Azure Event Hub
  */
 @ApplicationScoped
+@Slf4j
 public class EventHubService {
-
-    private static final Logger LOG = Logger.getLogger(EventHubService.class);
 
     @Inject
     EventHubProducerClient producer;

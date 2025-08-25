@@ -8,7 +8,7 @@ public class MessageUtils {
         throw new IllegalStateException("Utility class");
     }
 
-    private static final String BUNDLE_NAME = "messages";
+    private static final String BUNDLE_NAME = "ValidationMessages";
     private static final ResourceBundle RESOURCE_BUNDLE = ResourceBundle.getBundle(BUNDLE_NAME);
 
     public static String getString(String key) {
