@@ -151,25 +151,28 @@ public class SimulacaoController {
             status = "500";
             throw e;
             
-        } finally {
-            // Registrar métricas no bloco finally para garantir que sempre sejam registradas
-            long durationNanos = System.nanoTime() - startTime;
-            double durationSeconds = durationNanos / 1_000_000_000.0;
-            
-            Attributes attributes = Attributes.of(
-                    ENDPOINT_KEY, "/api/simulacao/processar",
-                    METHOD_KEY, "POST",
-                    STATUS_KEY, status
-            );
-            
-            // Registrar duração no OpenTelemetry
-            httpServerDurationHistogram.record(durationSeconds, attributes);
-            
-            // Registrar contador de requisições no OpenTelemetry
-            httpServerRequestsCounter.add(1, attributes);
-            
-            // Registrar métricas no MetricasService para coleta posterior
-            metricasService.registrarRequisicao(status, durationSeconds);
+        } // No bloco finally do método processarSimulacao
+        finally {
+        // Calcular duração em segundos
+        long endTime = System.nanoTime();
+        double durationSeconds = (endTime - startTime) / 1_000_000_000.0;
+        
+        // Criar atributos para classificação das métricas
+        Attributes attributes = Attributes.of(
+            ENDPOINT_KEY, "/api/simulacao/processar",
+            METHOD_KEY, "POST",
+            STATUS_KEY, status
+        );
+        
+        // Registrar duração no OpenTelemetry
+        httpServerDurationHistogram.record(durationSeconds, attributes);
+        
+        // Registrar contador de requisições no OpenTelemetry
+        httpServerRequestsCounter.add(1, attributes);
+        
+        // Registrar métricas no MetricasService para coleta posterior
+        // No bloco finally do método processarSimulacao, alterar:
+        metricasService.registrarRequisicao("/api/simulacao/processar", status, durationSeconds);
         }
     }
 
