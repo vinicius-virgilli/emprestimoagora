@@ -1,125 +1,60 @@
+version: '3.8'
+
 services:
-  # =============================================================================
-  # BANCO DE DADOS POSTGRESQL
-  # Banco principal da aplicação para desenvolvimento
-  # Porta: 5432 | Database: api_emprestimo_agora_dev | User: api_emprestimo_agora
-  # =============================================================================
-  postgres-dev:
+  postgres:
     image: postgres:15-alpine
-    container_name: api-emprestimo-agora-postgres-dev
+    container_name: emprestimoagora-postgres
     environment:
-      POSTGRES_DB: api_emprestimo_agora_dev
-      POSTGRES_USER: api_emprestimo_agora
-      POSTGRES_PASSWORD: dev123456
-      POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --lc-collate=C --lc-ctype=C"
+      POSTGRES_DB: emprestimoagora
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres123
+      POSTGRES_INITDB_ARGS: "--auth-host=scram-sha-256 --auth-local=scram-sha-256"
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./src/main/resources/db/migration:/docker-entrypoint-initdb.d
-    networks:
-      - api-emprestimo-agora-network
-    restart: unless-stopped
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql:ro
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U api_emprestimo_agora -d api_emprestimo_agora_dev"]
+      test: ["CMD-SHELL", "pg_isready -U postgres -d emprestimoagora"]
       interval: 10s
       timeout: 5s
       retries: 5
-
-  # =============================================================================
-  # AZURE STORAGE EMULATOR (AZURITE)
-  # Simula Azure Blob Storage, Queue Storage e Table Storage localmente
-  # Portas: 10000 (Blob), 10001 (Queue), 10002 (Table)
-  # =============================================================================
-  azurite:
-    image: mcr.microsoft.com/azure-storage/azurite
-    container_name: api-emprestimo-agora-azurite
-    ports:
-      - "10000:10000" # Blob service - armazenamento de arquivos
-      - "10001:10001" # Queue service - filas de mensagens
-      - "10002:10002" # Table service - armazenamento NoSQL
-    volumes:
-      - azurite_data:/data
-    networks:
-      - api-emprestimo-agora-network
     restart: unless-stopped
-    profiles:
-      - dev
-      - eventhub
-      - storage
+    networks:
+      - emprestimoagora-network
 
-  # =============================================================================
-  # AZURE EVENT HUB EMULATOR
-  # Simula Azure Event Hub para desenvolvimento local
-  # Portas: 5672 (AMQP), 9093 (Kafka)
-  # Usado para: Streaming de eventos, telemetria, logs de auditoria
-  # =============================================================================
-  eventhub-simulator:
-    image: mcr.microsoft.com/azure-messaging/eventhubs-emulator:latest
-    container_name: api-emprestimo-agora-eventhub
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: emprestimoagora-app
+    env_file:
+      - .env
     environment:
-      ACCEPT_EULA: Y
-      BLOB_SERVER: azurite
-      METADATA_SERVER: azurite
+      # Configurações específicas para PostgreSQL no Docker
+      LOCAL_DB_HOST: postgres
+      LOCAL_DB_PORT: 5432
+      LOCAL_DB_NAME: emprestimoagora
+      LOCAL_DB_USERNAME: postgres
+      LOCAL_DB_PASSWORD: postgres123
     ports:
-      - "5672:5672"   # AMQP - protocolo de mensageria
-      - "9093:9093"   # Kafka - protocolo de streaming
-    volumes:
-      - eventhub_data:/eventhub/emulator/data
-    networks:
-      - api-emprestimo-agora-network
+      - "8080:8080"
     depends_on:
-      - azurite
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/q/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
     restart: unless-stopped
-    profiles:
-      - dev
-      - eventhub
-
-  # =============================================================================
-  # KAFDROP - Kafka Web UI para Event Hub Emulator
-  # Portas: 9000
-  # Permite visualizar tópicos, mensagens e consumidores
-  # =============================================================================
-  kafdrop:
-    image: obsidiandynamics/kafdrop
-    container_name: kafdrop
-    environment:
-      KAFKA_BROKERCONNECT: "api-emprestimo-agora-eventhub:9093"
-      JVM_OPTS: "-Xms32M -Xmx64M"
-    ports:
-      - "9000:9000"
     networks:
-      - api-emprestimo-agora-network
-    depends_on:
-      - eventhub-simulator
-    restart: unless-stopped
-    profiles:
-      - dev
-      - eventhub
+      - emprestimoagora-network
 
-# =============================================================================
-# VOLUMES PERSISTENTES
-# Armazenamento de dados que persiste entre reinicializações dos containers
-# =============================================================================
 volumes:
   postgres_data:
-    driver: local
-    name: api_emprestimo_agora_postgres_data
-  
-  azurite_data:
-    driver: local
-    name: api_emprestimo_agora_azurite_data
-  
-  eventhub_data:
-    driver: local
-    name: api_emprestimo_agora_eventhub_data
-  
 
-# =============================================================================
-# REDES
-# Rede interna para comunicação entre containers
-# =============================================================================
 networks:
-  api-emprestimo-agora-network:
+  emprestimoagora-network:
     driver: bridge
-    name: api_emprestimo_agora_network

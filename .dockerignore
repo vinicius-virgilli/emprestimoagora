@@ -1,3 +1,44 @@
+# Build artifacts
+target/
+
+# Git
+.git/
+.gitignore
+
+# Environment files
+.env
+.env.*
+
+# Docker files
+docker-compose.yml
+Dockerfile
+.dockerignore
+
+# Logs and data
+logs/
+data/
+eventhub-data/
+
+# IDEs
+.vscode/
+.idea/
+*.iml
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.temp
+*.log
+
+# Documentation
+*.md
+AZURITE_MONITORING_README.md
+DOCKER_SERVICES.md
+PROFILES.md
+opentelemetry.md
 *
 !target/*-runner
 !target/*-runner.jar
