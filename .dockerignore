@@ -1,46 +1,32 @@
-# Build artifacts
+# Artefatos de build
 target/
 
 # Git
 .git/
 .gitignore
 
-# Environment files
-.env
-.env.*
-
-# Docker files
-docker-compose.yml
-Dockerfile
-.dockerignore
-
-# Logs and data
+# Logs e dados
 logs/
 data/
-eventhub-data/
 
 # IDEs
 .vscode/
 .idea/
 *.iml
 
-# OS files
+# OS e temporários
 .DS_Store
 Thumbs.db
-
-# Temporary files
 *.tmp
 *.temp
 *.log
 
-# Documentation
-*.md
-AZURITE_MONITORING_README.md
-DOCKER_SERVICES.md
-PROFILES.md
-opentelemetry.md
-*
-!target/*-runner
-!target/*-runner.jar
-!target/lib/*
-!target/quarkus-app/*
+# Arquivos de configuração do Docker
+docker-compose.yml
+Dockerfile
+
+# Incluir .env para docker-compose
+!.env
+
+# Incluir Maven wrapper e configuração
+!.mvn/

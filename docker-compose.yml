@@ -1,60 +1,38 @@
-version: '3.8'
+version: "3.9"
 
 services:
-  postgres:
+  emprestimo-agora-db:
     image: postgres:15-alpine
-    container_name: emprestimoagora-postgres
+    container_name: emprestimo-agora-db
+    restart: always
     environment:
-      POSTGRES_DB: emprestimoagora
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres123
-      POSTGRES_INITDB_ARGS: "--auth-host=scram-sha-256 --auth-local=scram-sha-256"
+      POSTGRES_DB: emprestimoagora
     ports:
       - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-      - ./init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    networks:
+      - backend
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d emprestimoagora"]
-      interval: 10s
+      test: ["CMD-SHELL", "pg_isready -U ${LOCAL_DB_USERNAME} -d ${LOCAL_DB_NAME}"]
+      interval: 5s
       timeout: 5s
       retries: 5
-    restart: unless-stopped
-    networks:
-      - emprestimoagora-network
+      start_period: 5s
 
   app:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: emprestimoagora-app
-    env_file:
-      - .env
-    environment:
-      # Configurações específicas para PostgreSQL no Docker
-      LOCAL_DB_HOST: postgres
-      LOCAL_DB_PORT: 5432
-      LOCAL_DB_NAME: emprestimoagora
-      LOCAL_DB_USERNAME: postgres
-      LOCAL_DB_PASSWORD: postgres123
+    build: .
+    container_name: api-emprestimo-agora
     ports:
       - "8080:8080"
+    env_file:
+      - .env
     depends_on:
-      postgres:
+      emprestimo-agora-db:
         condition: service_healthy
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/q/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 60s
-    restart: unless-stopped
     networks:
-      - emprestimoagora-network
-
-volumes:
-  postgres_data:
+      - backend
 
 networks:
-  emprestimoagora-network:
+  backend:
     driver: bridge
