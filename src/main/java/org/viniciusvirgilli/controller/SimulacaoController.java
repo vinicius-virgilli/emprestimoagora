@@ -1,5 +1,6 @@
 package org.viniciusvirgilli.controller;
 
+import jakarta.annotation.PostConstruct;
 import jakarta.inject.Inject;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.*;
@@ -14,10 +15,18 @@ import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 import org.viniciusvirgilli.dto.SimulacaoRequestDTO;
 import org.viniciusvirgilli.dto.SimulacaoResponseDTO;
 import org.viniciusvirgilli.exceptions.APIEmprestimoAgoraException;
+import org.viniciusvirgilli.service.MetricasService;
 import org.viniciusvirgilli.service.ProcessaSimulacaoService;
-import io.micrometer.core.instrument.MeterRegistry;
-import io.micrometer.core.instrument.Timer;
-import io.micrometer.core.instrument.Counter;
+
+// OpenTelemetry imports
+import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.metrics.Meter;
+import io.opentelemetry.api.metrics.LongCounter;
+import io.opentelemetry.api.metrics.DoubleHistogram;
+import io.opentelemetry.api.common.Attributes;
+import io.opentelemetry.api.common.AttributeKey;
+
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * Controller REST para operações de simulação de empréstimo
@@ -33,100 +42,134 @@ public class SimulacaoController {
     ProcessaSimulacaoService processaSimulacaoService;
 
     @Inject
-    MeterRegistry meterRegistry;
+    OpenTelemetry openTelemetry;
 
-    // Métricas do endpoint de simulação
-    private Timer simulacaoTimer;
-    private Counter simulacaoRequestCounter;
-    private Counter simulacaoSuccessCounter;
-    private Counter simulacaoErrorCounter;
+    @Inject
+    MetricasService metricasService;
 
-    @jakarta.annotation.PostConstruct
+    // OpenTelemetry métricas
+    private Meter meter;
+    private DoubleHistogram httpServerDurationHistogram;
+    private LongCounter httpServerRequestsCounter;
+    private final AtomicLong totalRequests = new AtomicLong(0);
+    private final AtomicLong successRequests = new AtomicLong(0);
+
+    // Attribute keys
+    private static final AttributeKey<String> ENDPOINT_KEY = AttributeKey.stringKey("endpoint");
+    private static final AttributeKey<String> METHOD_KEY = AttributeKey.stringKey("method");
+    private static final AttributeKey<String> STATUS_KEY = AttributeKey.stringKey("status");
+
+    @PostConstruct
     public void initMetrics() {
-        simulacaoTimer = Timer.builder("simulacao.processar.duration")
-                .description("Tempo de resposta do endpoint POST /api/simulacao/processar")
-                .tag("endpoint", "POST /api/simulacao/processar")
-                .register(meterRegistry);
+        // Criar meter
+        meter = openTelemetry.getMeter("emprestimo-agora");
 
-        simulacaoRequestCounter = Counter.builder("simulacao.processar.requests.total")
-                .description("Número total de requisições ao endpoint POST /api/simulacao/processar")
-                .tag("endpoint", "POST /api/simulacao/processar")
-                .register(meterRegistry);
+        // Histogram para duração das requisições (em segundos)
+        httpServerDurationHistogram = meter
+                .histogramBuilder("http_server_duration_seconds")
+                .setDescription("Tempo de resposta das requisições HTTP")
+                .setUnit("s")
+                .build();
 
-        simulacaoSuccessCounter = Counter.builder("simulacao.processar.requests.success")
-                .description("Número de requisições bem-sucedidas ao endpoint POST /api/simulacao/processar")
-                .tag("endpoint", "POST /api/simulacao/processar")
-                .tag("status", "success")
-                .register(meterRegistry);
+        // Counter para requisições totais
+        httpServerRequestsCounter = meter
+                .counterBuilder("http_server_requests_total")
+                .setDescription("Número total de requisições HTTP")
+                .build();
 
-        simulacaoErrorCounter = Counter.builder("simulacao.processar.requests.error")
-                .description("Número de requisições com erro ao endpoint POST /api/simulacao/processar")
-                .tag("endpoint", "POST /api/simulacao/processar")
-                .tag("status", "error")
-                .register(meterRegistry);
+        // Gauge para percentual de sucesso
+        meter.gaugeBuilder("http_server_success_rate")
+                .setDescription("Percentual de sucesso das requisições")
+                .setUnit("%")
+                .buildWithCallback(measurement -> {
+                    long total = totalRequests.get();
+                    long success = successRequests.get();
+                    double successRate = total > 0 ? (double) success / total * 100.0 : 0.0;
+                    measurement.record(successRate, Attributes.of(
+                            ENDPOINT_KEY, "/api/simulacao/processar",
+                            METHOD_KEY, "POST"
+                    ));
+                });
     }
-
 
     @POST
     @Path("/processar")
     @Operation(
-        summary = "Processar simulação de empréstimo",
-        description = "Recebe solicitação de simulação, valida dados, calcula SAC e PRICE, persiste no banco de dados de forma síncrona e retorna resultados"
+            summary = "Processar simulação de empréstimo",
+            description = "Recebe solicitação de simulação, valida dados, calcula SAC e PRICE, persiste no banco de dados de forma síncrona e retorna resultados"
     )
     @APIResponse(
-        responseCode = "200",
-        description = "Simulação processada com sucesso",
-        content = @Content(
-            mediaType = MediaType.APPLICATION_JSON,
-            schema = @Schema(implementation = SimulacaoResponseDTO.class)
-        )
+            responseCode = "200",
+            description = "Simulação processada com sucesso",
+            content = @Content(
+                    mediaType = MediaType.APPLICATION_JSON,
+                    schema = @Schema(implementation = SimulacaoResponseDTO.class)
+            )
     )
     @APIResponse(
-        responseCode = "400",
-        description = "Dados de entrada inválidos"
+            responseCode = "400",
+            description = "Dados de entrada inválidos"
     )
     @APIResponse(
-        responseCode = "404",
-        description = "Nenhum produto disponivel para os parâmetros informados"
+            responseCode = "404",
+            description = "Nenhum produto disponivel para os parâmetros informados"
     )
     @APIResponse(
-        responseCode = "500",
-        description = "Erro interno do servidor ou erro de persistência no banco de dados"
+            responseCode = "500",
+            description = "Erro interno do servidor ou erro de persistência no banco de dados"
     )
     public Response processarSimulacao(@Valid SimulacaoRequestDTO requestDTO) throws Exception {
-        long inicio = System.currentTimeMillis();
+        long startTime = System.nanoTime();
+        totalRequests.incrementAndGet();
 
-        simulacaoRequestCounter.increment();
-        Timer.Sample sample = Timer.start(meterRegistry);
-
+        String status = "500"; // Default para erro
+        
         try {
-            log.info(" [REQUISICAO][SIMULACAO] - Iniciando requisicao de simulacao: {}", requestDTO.toString());
+            log.info(" [REQUISICAO][SIMULACAO] - Iniciando requisicao de simulacao: {}", requestDTO);
 
             SimulacaoResponseDTO simulacao = processaSimulacaoService.executar(requestDTO);
 
-            simulacaoSuccessCounter.increment();
-            sample.stop(simulacaoTimer);
+            // Incrementar contador de sucesso
+            successRequests.incrementAndGet();
+            status = "200";
 
-            long tempoExecucao = System.currentTimeMillis() - inicio;
-            log.info(" [REQUISICAO][SIMULACAO] - Finalizando requisicao de simulacao com ID: {} em {}ms\n", simulacao.getIdSimulacao(), tempoExecucao);
+            long durationNanos = System.nanoTime() - startTime;
+            double durationSeconds = durationNanos / 1_000_000_000.0;
+            
+            log.info(" [REQUISICAO][SIMULACAO] - Finalizando requisicao de simulacao com ID: {} em {}ms",
+                    simulacao.getIdSimulacao(), Math.round(durationSeconds * 1000));
 
             return Response.ok(simulacao).build();
-            
+
         } catch (APIEmprestimoAgoraException exception) {
-            log.warn("[REQUISICAO][SIMULACAO] - Erro na requisicao" + exception.getMessage() + System.lineSeparator());
-
-            simulacaoErrorCounter.increment();
-            sample.stop(simulacaoTimer);
-            
+            log.warn("[REQUISICAO][SIMULACAO] - Erro na requisicao: {}", exception.getMessage());
+            status = "400";
             throw exception;
-                
+
         } catch (Exception e) {
-            log.warn("[REQUISICAO][SIMULACAO] - Erro na requisicao: " + e.getMessage() + System.lineSeparator());
-
-            simulacaoErrorCounter.increment();
-            sample.stop(simulacaoTimer);
-
+            log.warn("[REQUISICAO][SIMULACAO] - Erro na requisicao: {}", e.getMessage());
+            status = "500";
             throw e;
+            
+        } finally {
+            // Registrar métricas no bloco finally para garantir que sempre sejam registradas
+            long durationNanos = System.nanoTime() - startTime;
+            double durationSeconds = durationNanos / 1_000_000_000.0;
+            
+            Attributes attributes = Attributes.of(
+                    ENDPOINT_KEY, "/api/simulacao/processar",
+                    METHOD_KEY, "POST",
+                    STATUS_KEY, status
+            );
+            
+            // Registrar duração no OpenTelemetry
+            httpServerDurationHistogram.record(durationSeconds, attributes);
+            
+            // Registrar contador de requisições no OpenTelemetry
+            httpServerRequestsCounter.add(1, attributes);
+            
+            // Registrar métricas no MetricasService para coleta posterior
+            metricasService.registrarRequisicao(status, durationSeconds);
         }
     }
 
@@ -136,8 +179,8 @@ public class SimulacaoController {
     @GET
     @Path("/health")
     @Operation(
-        summary = "Verificar saúde do serviço",
-        description = "Endpoint para verificar se o serviço de simulação está funcionando"
+            summary = "Verificar saúde do serviço",
+            description = "Endpoint para verificar se o serviço de simulação está funcionando"
     )
     public Response health() {
         return Response.ok(new HealthResponse("OK", "Serviço de simulação funcionando")).build();
@@ -150,7 +193,8 @@ public class SimulacaoController {
         public String codigo;
         public String mensagem;
 
-        public ErrorResponse() {}
+        public ErrorResponse() {
+        }
 
         public ErrorResponse(String codigo, String mensagem) {
             this.codigo = codigo;
@@ -165,7 +209,8 @@ public class SimulacaoController {
         public String status;
         public String mensagem;
 
-        public HealthResponse() {}
+        public HealthResponse() {
+        }
 
         public HealthResponse(String status, String mensagem) {
             this.status = status;

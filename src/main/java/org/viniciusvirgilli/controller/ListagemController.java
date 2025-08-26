@@ -1,5 +1,6 @@
 package org.viniciusvirgilli.controller;
 
+import jakarta.annotation.PostConstruct;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
@@ -14,7 +15,17 @@ import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 import org.viniciusvirgilli.dto.ListagemSimulacoesResponseDTO;
 import org.viniciusvirgilli.enums.TipoSimulacao;
 import org.viniciusvirgilli.service.ProcessaSimulacaoService;
+import org.viniciusvirgilli.service.MetricasService;
 
+// Imports OpenTelemetry
+import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.api.common.Attributes;
+import io.opentelemetry.api.metrics.DoubleHistogram;
+import io.opentelemetry.api.metrics.LongCounter;
+import io.opentelemetry.api.metrics.Meter;
+
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Logger;
 
 /**
@@ -29,6 +40,43 @@ public class ListagemController {
 
     @Inject
     ProcessaSimulacaoService processaSimulacaoService;
+
+    @Inject
+    OpenTelemetry openTelemetry;
+
+    @Inject
+    MetricasService metricasService;
+
+    // OpenTelemetry métricas
+    private Meter meter;
+    private DoubleHistogram httpServerDurationHistogram;
+    private LongCounter httpServerRequestsCounter;
+    private final AtomicLong totalRequests = new AtomicLong(0);
+    private final AtomicLong successRequests = new AtomicLong(0);
+
+    // Attribute keys
+    private static final AttributeKey<String> ENDPOINT_KEY = AttributeKey.stringKey("endpoint");
+    private static final AttributeKey<String> METHOD_KEY = AttributeKey.stringKey("method");
+    private static final AttributeKey<String> STATUS_KEY = AttributeKey.stringKey("status");
+
+    @PostConstruct
+    public void init() {
+        // Inicializar o Meter
+        meter = openTelemetry.getMeter("emprestimo-agora-metrics");
+        
+        // Criar histograma para duração das requisições
+        httpServerDurationHistogram = meter
+            .histogramBuilder("http_server_duration_seconds")
+            .setDescription("Duração das requisições HTTP em segundos")
+            .setUnit("s")
+            .build();
+        
+        // Criar contador para número de requisições
+        httpServerRequestsCounter = meter
+            .counterBuilder("http_server_requests_total")
+            .setDescription("Número total de requisições HTTP")
+            .build();
+    }
 
     /**
      * Endpoint para listar todas as simulações realizadas com paginação
@@ -65,30 +113,56 @@ public class ListagemController {
             
             @Parameter(description = "Tamanho da pagina", example = "20")
             @QueryParam("tamanhoPagina") @DefaultValue("20") int tamanhoPagina,
-
+    
             @Parameter(description = "Tipo de empréstimo", example = "PRICE")
             @QueryParam("tipoEmprestimo") @DefaultValue("PRICE") TipoSimulacao tipoEmprestimo) {
-
-        long inicio = System.currentTimeMillis();
+    
+        long startTime = System.nanoTime();
+        totalRequests.incrementAndGet();
+    
+        String status = "500"; // Default para erro
         
         try {
             log.info("[REQUISICAO][LISTAGEM PAGINADA] - Iniciando listagem paginada de simulações");
-
+    
             ListagemSimulacoesResponseDTO resultado = processaSimulacaoService.buscaPaginada(pagina, tamanhoPagina, tipoEmprestimo);
             
             log.info(String.format("Encontradas %d simulações na página %d",
                 resultado.getQtdRegistrosPagina(), pagina));
-
-            long tempoExecucao = System.currentTimeMillis() - inicio;
+    
+            long tempoExecucao = System.currentTimeMillis() - (startTime / 1_000_000);
             log.info("[REQUISICAO][LISTAGEM PAGINADA] - Finalizando a listagem paginada em {}ms\n", tempoExecucao);
-
+    
+            status = "200";
+            successRequests.incrementAndGet();
             return Response.ok(resultado).build();
             
         } catch (Exception e) {
             log.error("Erro ao listar simulações: " + e.getMessage());
+            status = "500";
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
                 .entity(new ErrorResponse("INTERNAL_ERROR", "Erro interno do servidor"))
                 .build();
+        } finally {
+            // Calcular duração em segundos
+            long endTime = System.nanoTime();
+            double durationSeconds = (endTime - startTime) / 1_000_000_000.0;
+            
+            // Criar atributos para classificação das métricas
+            Attributes attributes = Attributes.of(
+                ENDPOINT_KEY, "/api/simulacoes/paginada",
+                METHOD_KEY, "GET",
+                STATUS_KEY, status
+            );
+            
+            // Registrar duração no OpenTelemetry
+            httpServerDurationHistogram.record(durationSeconds, attributes);
+            
+            // Registrar contador de requisições no OpenTelemetry
+            httpServerRequestsCounter.add(1, attributes);
+            
+            // Registrar métricas no MetricasService para coleta posterior
+            metricasService.registrarRequisicao("/api/simulacoes/paginada", durationSeconds);
         }
     }
 
