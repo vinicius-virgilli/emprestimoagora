@@ -39,7 +39,7 @@ public class ProcessaSimulacaoService {
     ProdutoCacheService produtoCacheService;
 
     @Inject
-    EventHubService eventHubService;
+    KafkaProducerService kafkaProducerService;
 
     @Inject
     RequestSimulacaoValidator validator;
@@ -72,28 +72,28 @@ public class ProcessaSimulacaoService {
 
         SimulacaoResponseDTO simulacaoResponseDTO = montaSimulacaoResponseDTO(simulacaoRealizada, resultados);
 
-        enviarSimulacaoEventHub(simulacaoResponseDTO);
+        enviarSimulacaoKafka(simulacaoResponseDTO);
 
         return simulacaoResponseDTO;
 
     }
 
-    private void enviarSimulacaoEventHub(SimulacaoResponseDTO simulacaoResponseDTO) {
+    private void enviarSimulacaoKafka(SimulacaoResponseDTO simulacaoResponseDTO) {
         managedExecutor.runAsync(() -> {
             long inicio = System.currentTimeMillis();
 
             try {
-                eventHubService.enviarEventoSimulacao(simulacaoResponseDTO);
+                kafkaProducerService.enviarSimulacao(simulacaoResponseDTO);
 
                 long tempoExecucao = System.currentTimeMillis() - inicio;
-                log.info("[PASSO 5][ENVIAR EVENT HUB] - Enviou simulacao de ID: {} para o Event Hub em {}ms\n", simulacaoResponseDTO.getIdSimulacao(), tempoExecucao);
+                log.info("[PASSO 5][ENVIAR KAFKA] - Enviou simulacao de ID: {} para o Kafka em {}ms\n", simulacaoResponseDTO.getIdSimulacao(), tempoExecucao);
 
             } catch (Exception e) {
-                log.error("[ERRO][EVENT HUB] - Erro ao enviar simulacao para o Event Hub", e);
-                throw new APIEmprestimoAgoraException("[ERRO][EVENT HUB] - Erro ao enviar simulacao para o Event Hub", e);
+                log.error("[ERRO][KAFKA] - Erro ao enviar simulacao para o Kafka", e);
+                throw new APIEmprestimoAgoraException("[ERRO][KAFKA] - Erro ao enviar simulacao para o Kafka", e);
             }
         }).exceptionally(ex -> {
-            log.error("[ERRO][EVENT HUB] - Excecao assincrona nao tratada", ex);
+            log.error("[ERRO][KAFKA] - Excecao assincrona nao tratada", ex);
             return null;
         });
     }

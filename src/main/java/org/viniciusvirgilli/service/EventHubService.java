@@ -22,8 +22,8 @@ public class EventHubService {
     @Inject
     EventHubProducerClient producer;
 
-    @ConfigProperty(name = "eventhub.enabled", defaultValue = "true")
-    boolean eventHubEnabled;
+    // @ConfigProperty(name = "eventhub.enabled", defaultValue = "true")
+    boolean eventHubEnabled = false;
 
     public void enviarEventoSimulacao(SimulacaoResponseDTO simulacao) {
         if (!eventHubEnabled || producer == null) {
