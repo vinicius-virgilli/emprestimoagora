@@ -41,6 +41,7 @@ public class MetricaEndpointDao {
         }
     }
 
+    @Transactional
     public Optional<MetricaEndpoint> buscarPorEndpointEData(String nomeEndpoint, LocalDate dataReferencia) {
         try {
             TypedQuery<MetricaEndpoint> query = local.createQuery(
@@ -58,6 +59,7 @@ public class MetricaEndpointDao {
         }
     }
 
+    @Transactional
     public List<MetricaEndpoint> buscarPorData(LocalDate dataReferencia) {
         try {
             TypedQuery<MetricaEndpoint> query = local.createQuery(
@@ -72,6 +74,7 @@ public class MetricaEndpointDao {
         }
     }
 
+    @Transactional
     public List<MetricaEndpoint> buscarTodas() {
         try {
             TypedQuery<MetricaEndpoint> query = local.createQuery(
