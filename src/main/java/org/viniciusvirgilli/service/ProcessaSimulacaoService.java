@@ -140,7 +140,7 @@ public class ProcessaSimulacaoService {
                 .codigoProduto(simulacaoRealizada.getCodigoProduto())
                 .descricaoProduto(simulacaoRealizada.getDescricaoProduto())
                 .taxaJuros(simulacaoRealizada.getTaxaJuros())
-                .resultadosSimulacao(resultados)
+                .resultadoSimulacao(resultados)
                 .build();
     }
 

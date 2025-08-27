@@ -42,9 +42,9 @@ public class SimulacaoResponseDTO {
     @Positive
     private BigDecimal taxaJuros;
 
-    @JsonProperty("resultadosSimulacao")
+    @JsonProperty("resultadoSimulacao")
     @NotNull
     @NotEmpty
     @Valid
-    private List<SimulacaoPorSistemaDTO> resultadosSimulacao;
+    private List<SimulacaoPorSistemaDTO> resultadoSimulacao;
 }

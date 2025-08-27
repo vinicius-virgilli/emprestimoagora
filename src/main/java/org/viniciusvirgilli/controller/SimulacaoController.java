@@ -171,8 +171,7 @@ public class SimulacaoController {
         httpServerRequestsCounter.add(1, attributes);
         
         // Registrar métricas no MetricasService para coleta posterior
-        // No bloco finally do método processarSimulacao, alterar:
-        metricasService.registrarRequisicao("/api/simulacao/processar", status, durationSeconds);
+        metricasService.registrarRequisicao("/api/simulacao/processar", durationSeconds, Integer.parseInt(status));
         }
     }
 

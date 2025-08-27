@@ -2,12 +2,18 @@ package org.viniciusvirgilli.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.*;
+import lombok.*;
 
 import java.math.BigDecimal;
 
 /**
  * DTO representando dados de telemetria de um endpoint
  */
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
 public class TelemetriaEndpointDTO {
 
     /**
@@ -59,83 +65,4 @@ public class TelemetriaEndpointDTO {
     @DecimalMax(value = "1.0", message = "Percentual de sucesso deve ser no máximo 1.0")
     private BigDecimal percentualSucesso;
 
-    /**
-     * Construtor padrão
-     */
-    public TelemetriaEndpointDTO() {
-    }
-
-    /**
-     * Construtor completo
-     */
-    public TelemetriaEndpointDTO(String nomeApi, Integer qtdRequisicoes, Integer tempoMedio,
-                                Integer tempoMinimo, Integer tempoMaximo, BigDecimal percentualSucesso) {
-        this.nomeApi = nomeApi;
-        this.qtdRequisicoes = qtdRequisicoes;
-        this.tempoMedio = tempoMedio;
-        this.tempoMinimo = tempoMinimo;
-        this.tempoMaximo = tempoMaximo;
-        this.percentualSucesso = percentualSucesso;
-    }
-
-    // Getters e Setters
-    public String getNomeApi() {
-        return nomeApi;
-    }
-
-    public void setNomeApi(String nomeApi) {
-        this.nomeApi = nomeApi;
-    }
-
-    public Integer getQtdRequisicoes() {
-        return qtdRequisicoes;
-    }
-
-    public void setQtdRequisicoes(Integer qtdRequisicoes) {
-        this.qtdRequisicoes = qtdRequisicoes;
-    }
-
-    public Integer getTempoMedio() {
-        return tempoMedio;
-    }
-
-    public void setTempoMedio(Integer tempoMedio) {
-        this.tempoMedio = tempoMedio;
-    }
-
-    public Integer getTempoMinimo() {
-        return tempoMinimo;
-    }
-
-    public void setTempoMinimo(Integer tempoMinimo) {
-        this.tempoMinimo = tempoMinimo;
-    }
-
-    public Integer getTempoMaximo() {
-        return tempoMaximo;
-    }
-
-    public void setTempoMaximo(Integer tempoMaximo) {
-        this.tempoMaximo = tempoMaximo;
-    }
-
-    public BigDecimal getPercentualSucesso() {
-        return percentualSucesso;
-    }
-
-    public void setPercentualSucesso(BigDecimal percentualSucesso) {
-        this.percentualSucesso = percentualSucesso;
-    }
-
-    @Override
-    public String toString() {
-        return "TelemetriaEndpointDTO{" +
-                "nomeApi='" + nomeApi + '\'' +
-                ", qtdRequisicoes=" + qtdRequisicoes +
-                ", tempoMedio=" + tempoMedio +
-                ", tempoMinimo=" + tempoMinimo +
-                ", tempoMaximo=" + tempoMaximo +
-                ", percentualSucesso=" + percentualSucesso +
-                '}';
-    }
 }

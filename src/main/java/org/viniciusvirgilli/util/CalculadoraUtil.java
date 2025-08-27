@@ -34,25 +34,25 @@ public class CalculadoraUtil {
      */
     public static List<ParcelaDTO> calcularSAC(BigDecimal valorEmprestimo, BigDecimal taxaJurosMensal, Short prazoMeses) {
         List<ParcelaDTO> parcelas = new ArrayList<>();
-
+    
         // Amortização constante
-        BigDecimal amortizacao = valorEmprestimo.divide(BigDecimal.valueOf(prazoMeses), 9, RoundingMode.HALF_UP);
-
+        BigDecimal amortizacao = valorEmprestimo.divide(BigDecimal.valueOf(prazoMeses), 2, RoundingMode.HALF_UP);
+    
         BigDecimal saldoDevedor = valorEmprestimo;
-
+    
         for (int i = 1; i <= prazoMeses; i++) {
             // Juros sobre o saldo devedor
-            BigDecimal juros = saldoDevedor.multiply(taxaJurosMensal).setScale(9, RoundingMode.HALF_UP);
-
+            BigDecimal juros = saldoDevedor.multiply(taxaJurosMensal).setScale(2, RoundingMode.HALF_UP);
+    
             // Prestação = Amortização + Juros
-            BigDecimal prestacao = amortizacao.add(juros);
-
+            BigDecimal prestacao = amortizacao.add(juros).setScale(2, RoundingMode.HALF_UP);
+    
             parcelas.add(new ParcelaDTO(i, amortizacao, juros, prestacao));
-
+    
             // Atualizar saldo devedor
             saldoDevedor = saldoDevedor.subtract(amortizacao);
         }
-
+    
         return parcelas;
     }
 
@@ -61,31 +61,31 @@ public class CalculadoraUtil {
      */
     public static List<ParcelaDTO> calcularPRICE(BigDecimal valorEmprestimo, BigDecimal taxaJurosMensal, Short prazoMeses) {
         List<ParcelaDTO> parcelas = new ArrayList<>();
-
+    
         BigDecimal umMaisTaxa = BigDecimal.ONE.add(taxaJurosMensal);
         BigDecimal potencia = umMaisTaxa.pow(prazoMeses);
         BigDecimal coeficiente = taxaJurosMensal.multiply(potencia)
                 .divide(potencia.subtract(BigDecimal.ONE), 10, RoundingMode.HALF_UP);
-
+    
         BigDecimal prestacaoFixa = valorEmprestimo.multiply(coeficiente)
-                .setScale(9, RoundingMode.HALF_UP);
-
+                .setScale(2, RoundingMode.HALF_UP);
+    
         BigDecimal saldoDevedor = valorEmprestimo;
-
+    
         for (int i = 1; i <= prazoMeses; i++) {
             // Juros sobre o saldo devedor
             BigDecimal juros = saldoDevedor.multiply(taxaJurosMensal)
-                    .setScale(9, RoundingMode.HALF_UP);
-
+                    .setScale(2, RoundingMode.HALF_UP);
+    
             // Amortização = Prestação - Juros
-            BigDecimal amortizacao = prestacaoFixa.subtract(juros);
-
+            BigDecimal amortizacao = prestacaoFixa.subtract(juros).setScale(2, RoundingMode.HALF_UP);
+    
             parcelas.add(new ParcelaDTO(i, amortizacao, juros, prestacaoFixa));
-
+    
             // Atualizar saldo devedor
             saldoDevedor = saldoDevedor.subtract(amortizacao);
         }
-
+    
         return parcelas;
     }
 
