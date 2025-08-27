@@ -100,7 +100,7 @@ public class SimulacaoController {
             description = "Recebe solicitação de simulação, valida dados, calcula SAC e PRICE, persiste no banco de dados de forma síncrona e retorna resultados"
     )
     @APIResponse(
-            responseCode = "200",
+            responseCode = "201",
             description = "Simulação processada com sucesso",
             content = @Content(
                     mediaType = MediaType.APPLICATION_JSON,
@@ -140,7 +140,7 @@ public class SimulacaoController {
             log.info(" [REQUISICAO][SIMULACAO] - Finalizando requisicao de simulacao com ID: {} em {}ms",
                     simulacao.getIdSimulacao(), Math.round(durationSeconds * 1000));
 
-            return Response.ok(simulacao).build();
+            return Response.status(201).entity(simulacao).build();
 
         } catch (APIEmprestimoAgoraException exception) {
             log.warn("[REQUISICAO][SIMULACAO] - Erro na requisicao: {}", exception.getMessage());

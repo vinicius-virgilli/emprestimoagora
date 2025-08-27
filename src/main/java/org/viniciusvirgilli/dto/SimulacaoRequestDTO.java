@@ -28,25 +28,12 @@ public class SimulacaoRequestDTO {
     @Positive(message = "{solicita_simulacao_emprestimo_prazo_menor_que_zero}")
     private Short prazo;
 
-    @Size(max = 140, message = "{solicita_simulacao_emprestimo_nome_cliente_maior_que_o_permitido}")
-    private String nomeCliente;
-
-    @CPF
-    private String cpfCliente;
-
     @Override
     public String toString() {
         StringJoiner joiner = new StringJoiner(", ", "{", "}");
 
         joiner.add("valorDesejado=" + valorDesejado);
         joiner.add("prazo=" + prazo);
-
-        if (nomeCliente != null) {
-            joiner.add("nomeCliente=" + nomeCliente);
-        }
-        if (cpfCliente != null) {
-            joiner.add("cpfCliente=" + cpfCliente);
-        }
 
         return joiner.toString();
     }

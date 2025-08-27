@@ -118,27 +118,6 @@ public class SimulacaoCacheService {
         log.info("Cache invalidado completamente - {} entradas removidas", sizeBefore);
     }
 
-    /**
-     * Invalida cache específico por tipo
-     */
-    public void invalidateByType(TipoSimulacao tipo) {
-        if (!cacheEnabled) {
-            return;
-        }
-
-        String typePrefix = tipo.name() + "_";
-        AtomicInteger removed = new AtomicInteger();
-        
-        cache.entrySet().removeIf(entry -> {
-            if (entry.getKey().contains(typePrefix)) {
-                removed.getAndIncrement();
-                return true;
-            }
-            return false;
-        });
-        
-        log.debug("Cache invalidado para tipo {} - {} entradas removidas", tipo, removed);
-    }
 
     /**
      * Remove entradas expiradas

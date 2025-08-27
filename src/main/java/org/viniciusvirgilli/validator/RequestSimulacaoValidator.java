@@ -25,8 +25,6 @@ public class RequestSimulacaoValidator {
 
         validaValorDesejado(dto.getValorDesejado(), campos);
         validaPrazo(dto.getPrazo(), campos);
-        validaNomeCliente(dto.getNomeCliente(), campos);
-        validaCpfCliente(dto.getCpfCliente(), campos);
 
         if (!campos.isEmpty()) {
             CamposComProblemasDTO problemasDTO = CamposComProblemasDTO.of(campos);
@@ -59,24 +57,6 @@ public class RequestSimulacaoValidator {
         }
         if (prazo <= 0) {
             campos.add(MessageUtils.getString("solicita_simulacao_emprestimo_prazo_menor_que_zero"));
-        }
-    }
-
-    private void validaNomeCliente(String nomeCliente, List<String> campos) {
-        if (nomeCliente != null && nomeCliente.length() > nomeClienteTamanhoMaximo) {
-            campos.add(MessageUtils.getString("solicita_simulacao_emprestimo_nome_cliente_maior_que_o_permitido"));
-        }
-        if (nomeCliente != null && !nomeCliente.matches("^[\\p{L}\\s]+$")) {
-            campos.add(MessageUtils.getString("solicita_simulacao_emprestimo_nome_cliente_tipo_invalido"));
-        }
-    }
-
-    private void validaCpfCliente(String cpf, List<String> campos) {
-        if (cpf == null) {
-            return;
-        }
-        if (!cpf.matches("\\d{11}")) {
-            campos.add(MessageUtils.getString("solicita_simulacao_emprestimo_cpf_cliente_formato_invalido"));
         }
     }
 }

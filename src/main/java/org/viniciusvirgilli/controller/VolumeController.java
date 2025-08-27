@@ -262,5 +262,4 @@ public class VolumeController {
         }
     }
 
-    // Remover a classe HealthResponse interna
 }

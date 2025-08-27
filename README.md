@@ -1,24 +1,17 @@
-# API Empréstimo Agora
+# 📌 API Empréstimo Agora
 
-> **Simulador de empréstimos desenvolvido em Java 17 + Quarkus com foco em performance, robustez e facilidade de manutenção**
+💳 **Simulador de Empréstimos** desenvolvido em **Java 17 + Quarkus**
 
-## 🚀 Execução Rápida
+## ⚡ Execução Rápida
 
-### Opção 1: Docker Compose (Recomendado)
+### 🔹 Opção 1 — Docker Compose (✅ Recomendado)
+
 ```bash
 docker-compose up -d
 ```
 
-### Opção 2: Execução Local
-```bash
-# 1. Subir dependências
-docker-compose up -d postgres-dev azurite eventhub-simulator
+### 🔹 Opção 2 — Build e Execução Manual
 
-# 2. Executar aplicação
-./mvnw quarkus:dev
-```
-
-### Opção 3: Build e Execução Manual
 ```bash
 # Build
 ./mvnw clean package -DskipTests
@@ -27,137 +20,62 @@ docker-compose up -d postgres-dev azurite eventhub-simulator
 java -jar target/*-runner.jar
 ```
 
-### 🌐 URLs de Acesso
-- **API**: http://localhost:8080
-- **Swagger UI**: http://localhost:8080/q/swagger-ui
-- **Health Check**: http://localhost:8080/q/health
-- **Métricas**: http://localhost:8080/q/metrics
+## 🌐 URLs de Acesso
 
----
+- **API** → http://localhost:8080
+- **Swagger UI** → http://localhost:8080/q/swagger-ui
 
-## 🎯 Implementações Adicionais e Diferenciais
+## 🚀 Diferenciais Implementados
 
-### 🏗️ **Arquitetura Robusta**
-- **Framework**: Quarkus 3.15.6 (supersônico e subatômico)
-- **Java 17+** com recursos modernos
-- **Multi-stage Docker** para builds otimizados
-- **Separação clara de responsabilidades** (Controllers, Services, DTOs, Entities)
+### 🔒 Rate Limiting Avançado
 
-### ⚡ **Performance e Escalabilidade**
-- **Cache Inteligente**: Sistema de cache em memória com TTL configurável
-  - Cache de produtos com invalidação automática
-  - Cache de listagens com paginação otimizada
-  - Estatísticas de cache em tempo real
-- **Rate Limiting Avançado**: Controle de requisições por IP
-  - 200 req/s, 12.000 req/min, 17.280.000 req/hora
-  - Bloqueio temporário inteligente
-- **JVM Otimizada**: G1GC, String Deduplication, heap sizing
-- **Conexões de BD**: Pool otimizado (min: 2, max: 20)
+- Definido após testes de carga com JMeter para obter a taxa ideal de requests por segundo, protegendo a aplicação sem limitar demais o uso.
+- **Limites**: 200 req/s, 12.000 req/min, 17.280.000 req/hora.
+- Bloqueio temporário inteligente para abusos.
 
-### 🛡️ **Robustez e Confiabilidade**
-- **Validação Completa**: Bean Validation com mensagens customizadas
-- **Exception Handling**: Tratamento centralizado de erros
-- **Health Checks**: Endpoints de saúde em todos os controllers
-- **Transações**: Controle transacional com rollback automático
-- **Retry Logic**: Tolerância a falhas com circuit breaker
+### 🧠 Cache Inteligente
 
-### 📊 **Observabilidade Completa**
-- **OpenTelemetry**: Rastreamento distribuído
-- **Métricas Customizadas**: Contadores, timers, histogramas
-- **Telemetria Detalhada**: API `/api/telemetria` com métricas por endpoint
-- **Logs Estruturados**: Diferentes níveis por ambiente
-- **Prometheus**: Métricas exportadas para monitoramento
+- Cache em memória com TTL configurável.
+- Cache de produtos com invalidação automática.
+- Cache de listagens com paginação otimizada.
+- Estatísticas de cache em tempo real.
 
-### 🔄 **Integração e Persistência**
-- **Event Hub**: Envio assíncrono para Azure Event Hub
-- **Multi-Database**: PostgreSQL (prod), H2 (test), SQL Server (integração)
-- **Migrations**: Hibernate com scripts SQL organizados
-- **Backup de Dados**: Volumes Docker persistentes
+### 📊 Endpoints Extras
 
-### 🧪 **Qualidade e Testes**
-- **Ambiente de Testes**: Configuração H2 in-memory
-- **Dados de Teste**: Scripts SQL com cenários completos
-- **Postman Collection**: 15+ endpoints documentados
-- **Profiles**: dev, test, prod com configurações específicas
+- Busca de produtos.
+- Busca de transação por ID.
+- Parâmetro opcional na busca paginada para valores referentes ao sistema SAC ou PRICE.
+- Parâmetro opcional de data no endpoint de telemetria.
 
-### 🔧 **Facilidade de Manutenção**
-- **Documentação OpenAPI**: Swagger completo com exemplos
-- **DTOs Tipados**: Validação e serialização automática
-- **Lombok**: Redução de boilerplate
-- **Configuração Externa**: Properties por ambiente
-- **Docker Services**: PostgreSQL, Azurite, EventHub Simulator, PgAdmin
+## ⚙️ Funcionalidades Obrigatórias (Core)
 
----
+### 🗄️ Banco de Dados
 
-## 📋 Endpoints Implementados
+- Pool otimizado (min: 2, max: 20 conexões).
+- **Multi-Database**:
+  - PostgreSQL (produção).
+  - H2 (testes unitários).
+  - SQL Server (integrações).
+- Backup persistente com volumes Docker.
 
-### 💰 Simulação de Empréstimos
-- `POST /api/simulacao/processar` - Processar simulação
-- `GET /api/simulacao/{id}` - Buscar simulação por ID
-- `GET /api/simulacao/health` - Health check
+### ✅ Validação e Robustez
 
-### 📊 Listagem e Consultas
-- `GET /api/simulacoes` - Listar simulações (paginado)
-- `GET /api/simulacoes/valores-diarios` - Valores diários
-- `GET /api/simulacoes/health` - Health check
+- Bean Validation com mensagens customizadas.
+- DTOs tipados → validação + serialização automática.
+- Exception Handling centralizado com respostas detalhadas.
 
-### 🏷️ Produtos
-- `GET /api/produtos` - Listar produtos
-- `GET /api/produtos/{id}` - Buscar produto por ID
-- `GET /api/produtos/health` - Health check
+### 🩺 Observabilidade e Resiliência
 
-### 📈 Volume e Estatísticas
-- `GET /api/volume/total-simulacoes` - Total de simulações
-- `GET /api/volume/valor-medio-prestacao` - Valor médio de prestação
-- `GET /api/volume/health` - Health check
+- Health Checks em todos os controllers.
+- Transações com rollback automático.
+- OpenTelemetry → rastreamento distribuído.
 
-### 🔍 Telemetria e Monitoramento
-- `GET /api/telemetria` - Métricas gerais
-- `GET /api/telemetria/servico/{nome}` - Métricas por serviço
-- `GET /api/telemetria/performance` - Métricas de performance
-- `GET /api/telemetria/health` - Health check
+### ☁️ Integrações
 
----
+- **Event Hub**: envio assíncrono para Azure Event Hub.
 
-## 🛠️ Stack Tecnológica
+### 🛠️ Desenvolvimento Amigável
 
-### Core
-- **Quarkus 3.15.6** - Framework reativo
-- **Java 17** - LTS com recursos modernos
-- **Maven** - Gerenciamento de dependências
-
-### Persistência
-- **Hibernate ORM + Panache** - ORM simplificado
-- **PostgreSQL** - Banco principal
-- **H2** - Testes
-- **HikariCP** - Pool de conexões
-
-### Observabilidade
-- **OpenTelemetry** - Rastreamento distribuído
-- **Micrometer + Prometheus** - Métricas
-- **SmallRye Health** - Health checks
-
-### Integração
-- **Azure Event Hub** - Mensageria
-- **Jackson** - Serialização JSON
-- **Bean Validation** - Validações
-
-### DevOps
-- **Docker + Docker Compose** - Containerização
-- **Azurite** - Emulador Azure Storage
-- **PgAdmin** - Administração de BD
-
----
-
-## 🎯 Características de Qualidade
-
-| Aspecto | Implementação |
-|---------|---------------|
-| **⚡ Performance** | Startup < 1s, Cache hit rate > 90%, Pool otimizado, JVM tuning |
-| **🛡️ Robustez** | Rate limiting, Validação multicamada, Exception handling, Transações |
-| **🔧 Manutenibilidade** | Código limpo, OpenAPI completa, Logs estruturados, Config externa |
-| **🔒 Confiabilidade** | Health checks, Circuit breaker, Persistência transacional, Monitoramento |
-
----
-
-## 📁 Estrutura do Projeto
+- Scripts SQL de dados de teste → permite desenvolver offline.
+- Properties por ambiente (dev, test, prod).
+- Swagger/OpenAPI completo com exemplos práticos.
