@@ -54,7 +54,6 @@ java -jar target/*-runner.jar
 - Pool otimizado (min: 2, max: 20 conexões).
 - **Multi-Database**:
   - PostgreSQL (produção).
-  - H2 (testes unitários).
   - SQL Server (integrações).
 - Backup persistente com volumes Docker.
 
@@ -72,10 +71,11 @@ java -jar target/*-runner.jar
 
 ### ☁️ Integrações
 
-- **Event Hub**: envio assíncrono para Azure Event Hub.
+- **Event Hub**: envio assíncrono para Azure Event Hub para não bloquear a resposta ao cliente.
 
 ### 🛠️ Desenvolvimento Amigável
 
 - Scripts SQL de dados de teste → permite desenvolver offline.
-- Properties por ambiente (dev, test, prod).
+- Uso do arquivo .env para variáveis de ambiente (mais seguro e fácil troca de variável)
+- Properties por ambiente (prod e dev).
 - Swagger/OpenAPI completo com exemplos práticos.
