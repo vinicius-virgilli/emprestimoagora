@@ -20,7 +20,7 @@ public class RequestListagemValidador {
         List<String> campos = new ArrayList<>();
 
         validarPagina(pagina, campos);
-        // validarTamanhoPagina(tamanhoPagina, campos);
+        validarTamanhoPagina(tamanhoPagina, campos);
 
         if (!campos.isEmpty()) {
             CamposComProblemasDTO problemasDTO = CamposComProblemasDTO.of(campos);

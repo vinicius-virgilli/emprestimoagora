@@ -51,6 +51,9 @@ public class ProcessaSimulacaoService {
     SimulacaoRealizadaDao simulacaoRealizadaDao;
 
     @Inject
+    SimulacaoCacheService simulacaoCacheService;
+
+    @Inject
     @ManagedExecutorConfig(propagated = ThreadContext.ALL_REMAINING)
     @NamedInstance("MyExecutor")
     ManagedExecutor managedExecutor;
@@ -116,6 +119,9 @@ public class ProcessaSimulacaoService {
 
         try {
             SimulacaoRealizada simulacaoPersistida = simulacaoRealizadaDao.salvar(simulacaoRealizada);
+
+            // Invalida o cache após salvar nova simulação
+            simulacaoCacheService.invalidateAll();
 
             long tempoExecucao = System.currentTimeMillis() - incio;
             log.info("[PASSO 4][PERSISTIR SIMULACAO] - Persistiu simulacao em {}ms", tempoExecucao);
@@ -188,20 +194,34 @@ public class ProcessaSimulacaoService {
     }
 
     private ListagemSimulacoesResponseDTO buscarSimulacoesPaginada(Integer pagina, Integer tamanhoPagina, String tipoEmprestimo) {
-        long inicio = System.currentTimeMillis();
-
-        ListagemSimulacoesResponseDTO resultados = new ListagemSimulacoesResponseDTO();
+        TipoSimulacao tipo = TipoSimulacao.valueOf(tipoEmprestimo);
         
-        // compara com o enum TipoEmprestimo SAC
+        // Tenta buscar no cache primeiro
+        ListagemSimulacoesResponseDTO resultadoCache = simulacaoCacheService.get(pagina, tamanhoPagina, tipo);
+        if (resultadoCache != null) {
+            log.info("[CACHE HIT] - Resultado encontrado no cache para página {} tipo {}", pagina, tipo);
+            return resultadoCache;
+        }
+        
+        long inicio = System.currentTimeMillis();
+        ListagemSimulacoesResponseDTO resultados;
+        
+        // Busca no banco de dados
         if (TipoSimulacao.SAC.name().equals(tipoEmprestimo)) {
             resultados = simulacaoRealizadaDao.buscaPaginada(pagina, tamanhoPagina, TipoSimulacao.SAC);
         } else if (TipoSimulacao.PRICE.name().equals(tipoEmprestimo)) {
             resultados = simulacaoRealizadaDao.buscaPaginada(pagina, tamanhoPagina, TipoSimulacao.PRICE);
+        } else {
+            resultados = new ListagemSimulacoesResponseDTO();
         }
 
         long tempoExecucao = System.currentTimeMillis() - inicio;
         log.info("[BANCO] - Buscou simulacoes paginadas em {}ms", tempoExecucao);
-
+        
+        // Armazena resultado no cache
+        simulacaoCacheService.put(pagina, tamanhoPagina, tipo, resultados);
+        log.info("[CACHE PUT] - Resultado armazenado no cache para página {} tipo {}", pagina, tipo);
+        
         return resultados;
     }
 
