@@ -1,14 +1,19 @@
 package org.viniciusvirgilli.service;
 
+import io.smallrye.context.api.ManagedExecutorConfig;
+import io.smallrye.context.api.NamedInstance;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
 import lombok.extern.slf4j.Slf4j;
+import org.eclipse.microprofile.context.ManagedExecutor;
+import org.eclipse.microprofile.context.ThreadContext;
 import org.viniciusvirgilli.dao.MetricaEndpointDao;
 import org.viniciusvirgilli.dto.TelemetriaResponseDTO;
 import org.viniciusvirgilli.dto.TelemetriaEndpointDTO;
+import org.viniciusvirgilli.exceptions.APIEmprestimoAgoraException;
 import org.viniciusvirgilli.model.local.MetricaEndpoint;
 
 import java.math.BigDecimal;
@@ -34,6 +39,11 @@ public class MetricasService {
 
     @Inject
     MetricaEndpointDao metricaEndpointDao;
+
+    @Inject
+    @ManagedExecutorConfig(propagated = ThreadContext.ALL_REMAINING)
+    @NamedInstance("MyExecutor")
+    ManagedExecutor managedExecutor;
 
     @ConfigProperty(name = "metricas.flush.limite.requisicoes", defaultValue = "10")
     int limiteRequisicoesSimulacao;
@@ -71,10 +81,10 @@ public class MetricasService {
         // Atualiza cache em memória
         atualizarCache(endpoint, durationMs, statusCode >= 200 && statusCode < 400);
         
-        // Se for endpoint de simulação, persiste imediatamente
+        // Se for endpoint de simulação, persiste imediatamente de forma assíncrona
         if (endpoint.contains("/simulacao")) {
-            log.debug("Persistindo métricas após requisição de simulação: {}", endpoint);
-            persistirCacheNoBanco();
+            log.debug("Persistindo métricas de forma assíncrona após requisição de simulação: {}", endpoint);
+            persistirCacheNoBancoAsync();
         }
     }
 
@@ -92,8 +102,8 @@ public class MetricasService {
         // Verifica se mudou o dia (limpa cache se necessário)
         LocalDate hoje = LocalDate.now();
         if (!hoje.equals(cacheDate)) {
-            log.info("Mudança de dia detectada. Persistindo cache e limpando para nova data: {}", hoje);
-            persistirCacheNoBanco();
+            log.info("Mudança de dia detectada. Persistindo cache de forma assíncrona e limpando para nova data: {}", hoje);
+            persistirCacheNoBancoAsync();
             endpointMetricsCache.clear();
             cacheDate = hoje;
         }
@@ -115,6 +125,50 @@ public class MetricasService {
 
     /**
      * Persiste o cache atual no banco de dados
+     */
+    /**
+     * Persiste o cache no banco de dados de forma assíncrona
+     */
+    private void persistirCacheNoBancoAsync() {
+        if (endpointMetricsCache.isEmpty()) {
+            return;
+        }
+
+        // Cria uma cópia do cache para processamento assíncrono
+        Map<String, EndpointMetrics> cacheSnapshot = new ConcurrentHashMap<>(endpointMetricsCache);
+        LocalDate dataSnapshot = cacheDate;
+
+        managedExecutor.runAsync(() -> {
+            long inicio = System.currentTimeMillis();
+
+            try {
+                for (Map.Entry<String, EndpointMetrics> entry : cacheSnapshot.entrySet()) {
+                    String endpoint = entry.getKey();
+                    EndpointMetrics metrics = entry.getValue();
+                    
+                    if (metrics.totalRequests.get() > 0) {
+                        salvarOuAtualizarMetrica(endpoint, dataSnapshot, metrics);
+                    }
+                }
+                
+                long tempoExecucao = System.currentTimeMillis() - inicio;
+                log.info("[METRICAS][PERSISTENCIA] - Cache de métricas persistido no banco de forma assíncrona em {}ms para a data: {}", tempoExecucao, dataSnapshot);
+
+            } catch (Exception e) {
+                log.error("[ERRO][METRICAS] - Erro ao persistir cache de métricas no banco de forma assíncrona", e);
+                throw new APIEmprestimoAgoraException("[ERRO][METRICAS] - Erro ao persistir cache de métricas no banco", e);
+            }
+        }).exceptionally(ex -> {
+            log.error("[ERRO][METRICAS] - Exceção assíncrona não tratada na persistência de métricas", ex);
+            return null;
+        });
+
+        // Limpa o cache após iniciar a persistência assíncrona para evitar duplicação
+        endpointMetricsCache.clear();
+    }
+
+    /**
+     * Persiste o cache no banco de dados de forma síncrona (mantido para compatibilidade)
      */
     private void persistirCacheNoBanco() {
         if (endpointMetricsCache.isEmpty()) {
@@ -230,6 +284,7 @@ public class MetricasService {
      * Força a persistência do cache atual
      */
     public void forcarPersistencia() {
+        log.info("Forçando persistência síncrona das métricas em cache");
         persistirCacheNoBanco();
     }
 
