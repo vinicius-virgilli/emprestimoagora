@@ -12,6 +12,7 @@ import org.eclipse.microprofile.openapi.annotations.media.Content;
 import org.eclipse.microprofile.openapi.annotations.media.Schema;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
+import org.viniciusvirgilli.dto.HealthResponseDTO;
 import org.viniciusvirgilli.dto.SimulacaoRequestDTO;
 import org.viniciusvirgilli.dto.SimulacaoResponseDTO;
 import org.viniciusvirgilli.exceptions.APIEmprestimoAgoraException;
@@ -185,38 +186,10 @@ public class SimulacaoController {
             description = "Endpoint para verificar se o serviço de simulação está funcionando"
     )
     public Response health() {
-        return Response.ok(new HealthResponse("OK", "Serviço de simulação funcionando")).build();
+        return Response.ok(HealthResponseDTO.builder()
+                .status("OK")
+                .mensagem("Serviço de simulação funcionando")
+                .build()).build();
     }
 
-    /**
-     * Classe para resposta de erro
-     */
-    public static class ErrorResponse {
-        public String codigo;
-        public String mensagem;
-
-        public ErrorResponse() {
-        }
-
-        public ErrorResponse(String codigo, String mensagem) {
-            this.codigo = codigo;
-            this.mensagem = mensagem;
-        }
-    }
-
-    /**
-     * Classe para resposta de saúde
-     */
-    public static class HealthResponse {
-        public String status;
-        public String mensagem;
-
-        public HealthResponse() {
-        }
-
-        public HealthResponse(String status, String mensagem) {
-            this.status = status;
-            this.mensagem = mensagem;
-        }
-    }
 }

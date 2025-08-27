@@ -2,6 +2,7 @@ package org.viniciusvirgilli.service;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
 import lombok.extern.slf4j.Slf4j;
@@ -34,13 +35,14 @@ public class MetricasService {
     @Inject
     MetricaEndpointDao metricaEndpointDao;
 
+    @ConfigProperty(name = "metricas.flush.limite.requisicoes", defaultValue = "10")
+    int limiteRequisicoesSimulacao;
+
     // Cache em memória para métricas do dia atual (performance)
     private final Map<String, EndpointMetrics> endpointMetricsCache = new ConcurrentHashMap<>();
     private LocalDate cacheDate = LocalDate.now();
     
-    // Contador para requisições de simulação
-    private final AtomicLong contadorSimulacao = new AtomicLong(0);
-    private static final int LIMITE_REQUISICOES_SIMULACAO = 10;
+    // Removido: contador e limite de requisições - não precisamos mais
 
     // Attribute keys para buscar métricas
     private static final AttributeKey<String> ENDPOINT_KEY = AttributeKey.stringKey("endpoint");
@@ -69,20 +71,11 @@ public class MetricasService {
         // Atualiza cache em memória
         atualizarCache(endpoint, durationMs, statusCode >= 200 && statusCode < 400);
         
-        // Verifica se é endpoint de simulação e incrementa contador
-        if ("/api/simulacao/processar".equals(endpoint)) {
-            long contadorAtual = contadorSimulacao.incrementAndGet();
-            log.debug("Requisição de simulação #{} registrada", contadorAtual);
-            
-            // Persiste métricas a cada 10 requisições de simulação
-            if (contadorAtual % LIMITE_REQUISICOES_SIMULACAO == 0) {
-                log.info("Limite de {} requisições de simulação atingido. Persistindo métricas no banco...", LIMITE_REQUISICOES_SIMULACAO);
-                persistirCacheNoBanco();
-            }
+        // Se for endpoint de simulação, persiste imediatamente
+        if (endpoint.contains("/simulacao")) {
+            log.debug("Persistindo métricas após requisição de simulação: {}", endpoint);
+            persistirCacheNoBanco();
         }
-        
-        // Persiste no banco de dados ao final do dia ou quando necessário
-        persistirMetricasSeNecessario();
     }
 
     /**
@@ -99,6 +92,7 @@ public class MetricasService {
         // Verifica se mudou o dia (limpa cache se necessário)
         LocalDate hoje = LocalDate.now();
         if (!hoje.equals(cacheDate)) {
+            log.info("Mudança de dia detectada. Persistindo cache e limpando para nova data: {}", hoje);
             persistirCacheNoBanco();
             endpointMetricsCache.clear();
             cacheDate = hoje;
@@ -126,7 +120,7 @@ public class MetricasService {
         if (endpointMetricsCache.isEmpty()) {
             return;
         }
-
+    
         try {
             for (Map.Entry<String, EndpointMetrics> entry : endpointMetricsCache.entrySet()) {
                 String endpoint = entry.getKey();
@@ -136,7 +130,10 @@ public class MetricasService {
                     salvarOuAtualizarMetrica(endpoint, cacheDate, metrics);
                 }
             }
-            log.info("Cache de métricas persistido no banco para a data: {}", cacheDate);
+            
+            // Limpa o cache após persistir para evitar duplicação
+            endpointMetricsCache.clear();
+            log.info("Cache de métricas persistido no banco e limpo para a data: {}", cacheDate);
         } catch (Exception e) {
             log.error("Erro ao persistir cache de métricas no banco", e);
         }
@@ -181,29 +178,12 @@ public class MetricasService {
         metricaEndpointDao.salvar(metrica);
     }
 
-    /**
-     * Persiste métricas se necessário (chamado periodicamente)
-     */
-    private void persistirMetricasSeNecessario() {
-        // Persiste a cada 100 requisições ou se mudou o dia
-        LocalDate hoje = LocalDate.now();
-        if (!hoje.equals(cacheDate)) {
-            persistirCacheNoBanco();
-            endpointMetricsCache.clear();
-            cacheDate = hoje;
-        }
-    }
 
     /**
      * Coleta métricas para uma data específica
      */
     public TelemetriaResponseDTO coletarMetricas(LocalDate dataReferencia) {
         List<TelemetriaEndpointDTO> endpoints = new ArrayList<>();
-        
-        // Se é a data atual, persiste o cache primeiro
-        if (dataReferencia.equals(LocalDate.now())) {
-            persistirCacheNoBanco();
-        }
         
         // Busca métricas do banco de dados
         List<MetricaEndpoint> metricas = metricaEndpointDao.buscarPorData(dataReferencia);
@@ -273,41 +253,4 @@ public class MetricasService {
         log.info("Métricas zeradas para a data: {}", data);
     }
 
-    // Métodos de compatibilidade mantidos
-    public Object[] coletarMetricasSimulacao() {
-        return coletarMetricasEndpoint("/api/simulacao/processar");
-    }
-
-    public Object[] coletarMetricasListagem() {
-        return coletarMetricasEndpoint("/api/simulacoes/paginada");
-    }
-
-    private Object[] coletarMetricasEndpoint(String endpoint) {
-        LocalDate hoje = LocalDate.now();
-        Optional<MetricaEndpoint> metrica = metricaEndpointDao.buscarPorEndpointEData(endpoint, hoje);
-        
-        if (metrica.isPresent()) {
-            MetricaEndpoint m = metrica.get();
-            BigDecimal tempoMedio = m.calcularTempoMedio();
-            BigDecimal percentualSucesso = m.calcularPercentualSucesso();
-            
-            return new Object[]{
-                m.getTotalRequisicoes(),
-                tempoMedio.doubleValue(),
-                m.getDuracaoMinimaMs().doubleValue(),
-                m.getDuracaoMaximaMs().doubleValue(),
-                percentualSucesso.doubleValue()
-            };
-        }
-        
-        return new Object[]{0L, 0.0, 0.0, 0.0, 0.0};
-    }
-
-    public boolean temMetricasDisponiveis() {
-        return !metricaEndpointDao.buscarTodas().isEmpty() || !endpointMetricsCache.isEmpty();
-    }
-
-    public boolean hasMetricas() {
-        return temMetricasDisponiveis();
-    }
 }

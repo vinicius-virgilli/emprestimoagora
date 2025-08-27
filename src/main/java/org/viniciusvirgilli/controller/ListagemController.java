@@ -12,6 +12,7 @@ import org.eclipse.microprofile.openapi.annotations.media.Content;
 import org.eclipse.microprofile.openapi.annotations.media.Schema;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
+import org.viniciusvirgilli.dto.HealthResponseDTO;
 import org.viniciusvirgilli.dto.ListagemSimulacoesResponseDTO;
 import org.viniciusvirgilli.enums.TipoSimulacao;
 import org.viniciusvirgilli.service.ProcessaSimulacaoService;
@@ -230,12 +231,18 @@ public class ListagemController {
         try {
             // persistenciaService.buscarTodasSimulacoes(0, 1);
             
-            return Response.ok(new HealthResponse("OK", "Serviço de listagem funcionando")).build();
+            return Response.ok(HealthResponseDTO.builder()
+                    .status("OK")
+                    .mensagem("Serviço de listagem funcionando")
+                    .build()).build();
             
         } catch (Exception e) {
             log.error("Erro no health check: " + e.getMessage());
             return Response.status(Response.Status.SERVICE_UNAVAILABLE)
-                .entity(new HealthResponse("ERROR", "Serviço de listagem indisponível"))
+                .entity(HealthResponseDTO.builder()
+                        .status("ERROR")
+                        .mensagem("Serviço de listagem indisponível")
+                        .build())
                 .build();
         }
     }
@@ -255,18 +262,5 @@ public class ListagemController {
         }
     }
 
-    /**
-     * Classe para resposta de saúde
-     */
-    public static class HealthResponse {
-        public String status;
-        public String mensagem;
-
-        public HealthResponse() {}
-
-        public HealthResponse(String status, String mensagem) {
-            this.status = status;
-            this.mensagem = mensagem;
-        }
-    }
+    // Remover a classe HealthResponse interna
 }

@@ -218,12 +218,18 @@ public class VolumeController {
 //            // Fazer uma consulta simples para verificar conectividade
 //            persistenciaService.buscarVolumeDiario(LocalDate.now());
 //
-//            return Response.ok(new HealthResponse("OK", "Serviço de volume funcionando")).build();
+//            return Response.ok(HealthResponseDTO.builder()
+//                    .status("OK")
+//                    .mensagem("Serviço de volume funcionando")
+//                    .build()).build();
 //
 //        } catch (Exception e) {
 //            LOGGER.severe("Erro no health check do volume: " + e.getMessage());
 //            return Response.status(Response.Status.SERVICE_UNAVAILABLE)
-//                .entity(new HealthResponse("ERROR", "Serviço de volume indisponível"))
+//                .entity(HealthResponseDTO.builder()
+//                        .status("ERROR")
+//                        .mensagem("Serviço de volume indisponível")
+//                        .build())
 //                .build();
 //        }
 //    }
@@ -243,18 +249,5 @@ public class VolumeController {
         }
     }
 
-    /**
-     * Classe para resposta de saúde
-     */
-    public static class HealthResponse {
-        public String status;
-        public String mensagem;
-
-        public HealthResponse() {}
-
-        public HealthResponse(String status, String mensagem) {
-            this.status = status;
-            this.mensagem = mensagem;
-        }
-    }
+    // Remover a classe HealthResponse interna
 }

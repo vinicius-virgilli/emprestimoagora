@@ -10,6 +10,7 @@ import org.eclipse.microprofile.openapi.annotations.media.Schema;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponses;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
+import org.viniciusvirgilli.dto.HealthResponseDTO;
 import org.viniciusvirgilli.model.hack.Produto;
 import org.viniciusvirgilli.dao.ProdutoDao;
 
@@ -82,6 +83,9 @@ public class ProdutoController {
         description = "Endpoint para verificar se o serviço de produtos está funcionando"
     )
     public Response health() {
-        return Response.ok("Serviço de produtos funcionando").build();
+        return Response.ok(HealthResponseDTO.builder()
+                .status("OK")
+                .mensagem("Serviço de produtos funcionando")
+                .build()).build();
     }
 }

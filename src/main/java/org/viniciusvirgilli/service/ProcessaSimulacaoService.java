@@ -150,21 +150,69 @@ public class ProcessaSimulacaoService {
 
     private Produto buscarProdutoCompativel(BigDecimal valorDesejado, Short prazo) {
         long inicio = System.currentTimeMillis();
-
+    
         List<Produto> produtos = produtoCacheService.findAllProdutos();
-
+    
         Produto produtoCompativel = produtos.stream()
                 .filter(produto -> valorDesejado.compareTo(produto.getValorMinimo()) >= 0 &&
                         (produto.getValorMaximo() == null || valorDesejado.compareTo(produto.getValorMaximo()) <= 0))
                 .filter(produto -> prazo >= produto.getNumeroMinimoMeses() &&
                         (produto.getNumeroMaximoMeses() == null || prazo <= produto.getNumeroMaximoMeses()))
                 .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException("Nenhum produto disponivel para o valor " + valorDesejado + " e prazo " + prazo));
-
+                .orElseThrow(() -> new APIEmprestimoAgoraException(400, criarMensagemErroDetalhada(valorDesejado, prazo, produtos)));
+    
         long tempoExecucao = System.currentTimeMillis() - inicio;
         log.info("[PASSO 2][BUSCAR PRODUTO COMPATIVEL] - Buscou produto compativel em {}ms", tempoExecucao);
-
+    
         return produtoCompativel;
+    }
+
+    private String criarMensagemErroDetalhada(BigDecimal valorDesejado, Short prazo, List<Produto> produtos) {
+        StringBuilder mensagem = new StringBuilder();
+        mensagem.append(String.format("Nenhum produto disponível para o valor %.2f e prazo %d meses. ", valorDesejado, prazo));
+        
+        // Encontrar produtos compatíveis por valor
+        List<Produto> produtosPorValor = produtos.stream()
+                .filter(produto -> valorDesejado.compareTo(produto.getValorMinimo()) >= 0 &&
+                        (produto.getValorMaximo() == null || valorDesejado.compareTo(produto.getValorMaximo()) <= 0))
+                .toList();
+        
+        // Encontrar produtos compatíveis por prazo
+        List<Produto> produtosPorPrazo = produtos.stream()
+                .filter(produto -> prazo >= produto.getNumeroMinimoMeses() &&
+                        (produto.getNumeroMaximoMeses() == null || prazo <= produto.getNumeroMaximoMeses()))
+                .toList();
+        
+        if (!produtosPorValor.isEmpty()) {
+            mensagem.append("Para o valor informado, os prazos disponíveis são: ");
+            produtosPorValor.forEach(produto -> {
+                String prazoMax = produto.getNumeroMaximoMeses() != null ? 
+                    produto.getNumeroMaximoMeses().toString() : "sem limite";
+                mensagem.append(String.format("%d a %s meses (%s); ", 
+                    produto.getNumeroMinimoMeses(), prazoMax, produto.getNomeProduto()));
+            });
+        } else if (!produtosPorPrazo.isEmpty()) {
+            mensagem.append("Para o prazo informado, as faixas de valores disponíveis são: ");
+            produtosPorPrazo.forEach(produto -> {
+                String valorMax = produto.getValorMaximo() != null ? 
+                    String.format("%.2f", produto.getValorMaximo()) : "sem limite";
+                mensagem.append(String.format("R$ %.2f a R$ %s (%s); ", 
+                    produto.getValorMinimo(), valorMax, produto.getNomeProduto()));
+            });
+        } else {
+            mensagem.append("Produtos disponíveis: ");
+            produtos.forEach(produto -> {
+                String valorMax = produto.getValorMaximo() != null ? 
+                    String.format("%.2f", produto.getValorMaximo()) : "sem limite";
+                String prazoMax = produto.getNumeroMaximoMeses() != null ? 
+                    produto.getNumeroMaximoMeses().toString() : "sem limite";
+                mensagem.append(String.format("%s: R$ %.2f a R$ %s, %d a %s meses; ", 
+                    produto.getNomeProduto(), produto.getValorMinimo(), valorMax, 
+                    produto.getNumeroMinimoMeses(), prazoMax));
+            });
+        }
+        
+        return mensagem.toString().replaceAll("; $", ".");
     }
 
     /**
