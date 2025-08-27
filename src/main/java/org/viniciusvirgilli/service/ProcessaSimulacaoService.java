@@ -357,4 +357,49 @@ public class ProcessaSimulacaoService {
             .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
+    /**
+     * Busca uma simulação específica pelo ID
+     * 
+     * @param id ID da simulação
+     * @return SimulacaoResponseDTO com os dados da simulação
+     */
+    public SimulacaoResponseDTO buscarPorId(Long id) {
+        try {
+            log.info("[BUSCA_SIMULACAO] - Buscando simulação com ID: {}", id);
+            
+            // Buscar a simulação no banco de dados
+            SimulacaoRealizada simulacaoRealizada = simulacaoRealizadaDao.findById(id);
+            
+            if (simulacaoRealizada == null) {
+                log.warn("[BUSCA_SIMULACAO] - Simulação não encontrada para ID: {}", id);
+                return null;
+            }
+            
+            // Recalcular as simulações SAC e PRICE a partir dos dados básicos
+            List<SimulacaoPorSistemaDTO> resultados = calcularSimulacoes(
+                simulacaoRealizada.getValorDesejado(),
+                simulacaoRealizada.getPrazo(),
+                simulacaoRealizada.getTaxaJuros()
+            );
+            
+            // Montar o DTO de resposta
+            SimulacaoResponseDTO responseDTO = SimulacaoResponseDTO.builder()
+                .idSimulacao(simulacaoRealizada.getIdSimulacao())
+                .codigoProduto(simulacaoRealizada.getCodigoProduto())
+                .descricaoProduto(simulacaoRealizada.getDescricaoProduto())
+                .taxaJuros(simulacaoRealizada.getTaxaJuros())
+                .resultadoSimulacao(resultados)
+                .build();
+            
+            log.info("[BUSCA_SIMULACAO] - Simulação encontrada: ID {}, Produto: {}", 
+                    responseDTO.getIdSimulacao(), responseDTO.getCodigoProduto());
+            
+            return responseDTO;
+            
+        } catch (Exception e) {
+            log.error("[ERRO][BUSCA_SIMULACAO] - Erro ao buscar simulação por ID: {}", id, e);
+            throw new APIEmprestimoAgoraException("Erro ao buscar simulação: " + e.getMessage(), e);
+        }
+    }
+
 }

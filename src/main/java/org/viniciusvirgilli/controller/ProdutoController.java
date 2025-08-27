@@ -79,8 +79,20 @@ public class ProdutoController {
     @GET
     @Path("/health")
     @Operation(
-        summary = "Verificar saúde do serviço",
+        summary = "Verificar saúde do serviço de produtos",
         description = "Endpoint para verificar se o serviço de produtos está funcionando"
+    )
+    @APIResponse(
+        responseCode = "200",
+        description = "Serviço funcionando corretamente",
+        content = @Content(
+            mediaType = MediaType.APPLICATION_JSON,
+            schema = @Schema(implementation = HealthResponseDTO.class)
+        )
+    )
+    @APIResponse(
+        responseCode = "503",
+        description = "Serviço indisponível"
     )
     public Response health() {
         return Response.ok(HealthResponseDTO.builder()

@@ -11,6 +11,7 @@ import org.eclipse.microprofile.openapi.annotations.media.Schema;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponses;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
+import org.viniciusvirgilli.dto.HealthResponseDTO;
 import org.viniciusvirgilli.dto.VolumeDiarioResponseDTO;
 import org.viniciusvirgilli.enums.TipoSimulacao;
 import org.viniciusvirgilli.service.ProcessaSimulacaoService;
@@ -204,35 +205,47 @@ public class VolumeController {
 //        }
 //    }
 
-//    /**
-//     * Endpoint para verificar saúde do serviço de volume
-//     */
-//    @GET
-//    @Path("/health")
-//    @Operation(
-//        summary = "Verificar saúde do serviço de volume",
-//        description = "Endpoint para verificar se o serviço de volume está funcionando"
-//    )
-//    public Response health() {
-//        try {
-//            // Fazer uma consulta simples para verificar conectividade
-//            persistenciaService.buscarVolumeDiario(LocalDate.now());
-//
-//            return Response.ok(HealthResponseDTO.builder()
-//                    .status("OK")
-//                    .mensagem("Serviço de volume funcionando")
-//                    .build()).build();
-//
-//        } catch (Exception e) {
-//            LOGGER.severe("Erro no health check do volume: " + e.getMessage());
-//            return Response.status(Response.Status.SERVICE_UNAVAILABLE)
-//                .entity(HealthResponseDTO.builder()
-//                        .status("ERROR")
-//                        .mensagem("Serviço de volume indisponível")
-//                        .build())
-//                .build();
-//        }
-//    }
+    /**
+     * Endpoint para verificar saúde do serviço de volume
+     */
+    @GET
+    @Path("/health")
+    @Operation(
+        summary = "Verificar saúde do serviço de volume",
+        description = "Endpoint para verificar se o serviço de volume está funcionando"
+    )
+    @APIResponse(
+        responseCode = "200",
+        description = "Serviço funcionando corretamente",
+        content = @Content(
+            mediaType = MediaType.APPLICATION_JSON,
+            schema = @Schema(implementation = HealthResponseDTO.class)
+        )
+    )
+    @APIResponse(
+        responseCode = "503",
+        description = "Serviço indisponível"
+    )
+    public Response health() {
+        try {
+            // Fazer uma consulta simples para verificar conectividade
+            processaSimulacaoService.buscarVolumePorProdutoPorDia(LocalDate.now(), 1, TipoSimulacao.PRICE);
+
+            return Response.ok(HealthResponseDTO.builder()
+                    .status("OK")
+                    .mensagem("Serviço de volume funcionando")
+                    .build()).build();
+
+        } catch (Exception e) {
+            LOGGER.severe("Erro no health check do volume: " + e.getMessage());
+            return Response.status(Response.Status.SERVICE_UNAVAILABLE)
+                .entity(HealthResponseDTO.builder()
+                        .status("ERROR")
+                        .mensagem("Serviço de volume indisponível: " + e.getMessage())
+                        .build())
+                .build();
+        }
+    }
 
     /**
      * Classe para resposta de erro

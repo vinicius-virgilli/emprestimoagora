@@ -167,57 +167,6 @@ public class ListagemController {
         }
     }
 
-//    /**
-//     * Endpoint para buscar uma simulação específica por ID
-//     *
-//     * @param idSimulacao ID da simulação
-//     * @return dados da simulação
-//     */
-//    @GET
-//    @Path("/{idSimulacao}")
-//    @Operation(
-//        summary = "Buscar simulação por ID",
-//        description = "Retorna os dados de uma simulação específica pelo seu ID"
-//    )
-//    @APIResponse(
-//        responseCode = "200",
-//        description = "Simulação encontrada com sucesso"
-//    )
-//    @APIResponse(
-//        responseCode = "404",
-//        description = "Simulação não encontrada"
-//    )
-//    @APIResponse(
-//        responseCode = "500",
-//        description = "Erro interno do servidor"
-//    )
-//    public Response buscarSimulacaoPorId(
-//            @Parameter(description = "ID da simulação", example = "123456789")
-//            @PathParam("idSimulacao") Long idSimulacao) {
-//
-//        try {
-//            log.info("Buscando simulação com ID: " + idSimulacao);
-//
-//            // var simulacao = persistenciaService.buscarSimulacaoPorId(idSimulacao);
-//
-//            // log.info("Simulação encontrada: " + simulacao.getIdSimulacao());
-//
-//            // return Response.ok(simulacao).build();
-//
-//        } catch (IllegalArgumentException e) {
-//            log.warn("Simulação não encontrada: " + idSimulacao);
-//            return Response.status(Response.Status.NOT_FOUND)
-//                .entity(new ErrorResponse("NOT_FOUND", "Simulação não encontrada"))
-//                .build();
-//
-//        } catch (Exception e) {
-//            log.error("Erro ao buscar simulação: " + e.getMessage());
-//            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-//                .entity(new ErrorResponse("INTERNAL_ERROR", "Erro interno do servidor"))
-//                .build();
-//        }
-//    }
-
     /**
      * Endpoint para verificar saúde do serviço de listagem
      */
@@ -227,24 +176,23 @@ public class ListagemController {
         summary = "Verificar saúde do serviço de listagem",
         description = "Endpoint para verificar se o serviço de listagem está funcionando"
     )
+    @APIResponse(
+        responseCode = "200",
+        description = "Serviço funcionando corretamente",
+        content = @Content(
+            mediaType = MediaType.APPLICATION_JSON,
+            schema = @Schema(implementation = HealthResponseDTO.class)
+        )
+    )
+    @APIResponse(
+        responseCode = "503",
+        description = "Serviço indisponível"
+    )
     public Response health() {
-        try {
-            // persistenciaService.buscarTodasSimulacoes(0, 1);
-            
-            return Response.ok(HealthResponseDTO.builder()
-                    .status("OK")
-                    .mensagem("Serviço de listagem funcionando")
-                    .build()).build();
-            
-        } catch (Exception e) {
-            log.error("Erro no health check: " + e.getMessage());
-            return Response.status(Response.Status.SERVICE_UNAVAILABLE)
-                .entity(HealthResponseDTO.builder()
-                        .status("ERROR")
-                        .mensagem("Serviço de listagem indisponível")
-                        .build())
-                .build();
-        }
+        return Response.ok(HealthResponseDTO.builder()
+                .status("OK")
+                .mensagem("Serviço de listagem funcionando")
+                .build()).build();
     }
 
     /**
@@ -262,5 +210,4 @@ public class ListagemController {
         }
     }
 
-    // Remover a classe HealthResponse interna
 }

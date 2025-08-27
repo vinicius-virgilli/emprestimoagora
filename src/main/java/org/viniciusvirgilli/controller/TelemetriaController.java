@@ -6,6 +6,9 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.microprofile.openapi.annotations.Operation;
+import org.eclipse.microprofile.openapi.annotations.media.Content;
+import org.eclipse.microprofile.openapi.annotations.media.Schema;
+import org.eclipse.microprofile.openapi.annotations.parameters.Parameter;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponses;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
@@ -32,23 +35,33 @@ public class TelemetriaController {
     @GET
     @Operation(
         summary = "Coletar métricas de telemetria",
-        description = "Retorna as métricas de telemetria para uma data específica ou data atual"
+        description = "Retorna as métricas de telemetria para uma data específica ou data atual se não informada"
     )
     @APIResponses({
         @APIResponse(
             responseCode = "200",
-            description = "Métricas coletadas com sucesso"
+            description = "Métricas coletadas com sucesso",
+            content = @Content(
+                mediaType = MediaType.APPLICATION_JSON,
+                schema = @Schema(implementation = TelemetriaResponseDTO.class)
+            )
         ),
         @APIResponse(
             responseCode = "400",
-            description = "Formato de data inválido"
+            description = "Formato de data inválido. Use o formato yyyy-MM-dd"
         ),
         @APIResponse(
             responseCode = "500",
             description = "Erro interno do servidor"
         )
     })
-    public Response getTelemetria(@QueryParam("dataReferencia") String dataReferenciaParam) {
+    public Response getTelemetria(
+        @Parameter(
+            description = "Data de referência no formato yyyy-MM-dd (opcional, padrão: data atual)",
+            example = "2024-01-15",
+            required = false
+        )
+        @QueryParam("dataReferencia") String dataReferenciaParam) {
         try {
             LocalDate dataReferencia;
             

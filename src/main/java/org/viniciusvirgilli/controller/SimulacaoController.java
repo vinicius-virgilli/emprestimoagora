@@ -177,13 +177,94 @@ public class SimulacaoController {
     }
 
     /**
+     * Endpoint para buscar simulação por ID
+     */
+    @GET
+    @Path("/{id}")
+    @Operation(
+            summary = "Buscar simulação por ID",
+            description = "Retorna os detalhes de uma simulação específica pelo seu identificador"
+    )
+    @APIResponse(
+            responseCode = "200",
+            description = "Simulação encontrada com sucesso",
+            content = @Content(
+                    mediaType = MediaType.APPLICATION_JSON,
+                    schema = @Schema(implementation = SimulacaoResponseDTO.class)
+            )
+    )
+    @APIResponse(
+            responseCode = "404",
+            description = "Simulação não encontrada"
+    )
+    @APIResponse(
+            responseCode = "500",
+            description = "Erro interno do servidor"
+    )
+    public Response buscarSimulacaoPorId(@PathParam("id") Long id) {
+        long startTime = System.nanoTime();
+        String status = "500"; // Default para erro
+        
+        try {
+            log.info("[REQUISICAO][BUSCA_SIMULACAO] - Buscando simulação com ID: {}", id);
+            
+            SimulacaoResponseDTO simulacao = processaSimulacaoService.buscarPorId(id);
+            
+            if (simulacao == null) {
+                status = "404";
+                return Response.status(Response.Status.NOT_FOUND)
+                        .entity("Simulação não encontrada")
+                        .build();
+            }
+            
+            status = "200";
+            log.info("[REQUISICAO][BUSCA_SIMULACAO] - Simulação encontrada: {}", simulacao.getIdSimulacao());
+            
+            return Response.ok(simulacao).build();
+            
+        } catch (Exception e) {
+            log.error("[REQUISICAO][BUSCA_SIMULACAO] - Erro ao buscar simulação: {}", e.getMessage());
+            status = "500";
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .entity("Erro interno do servidor")
+                    .build();
+        } finally {
+            // Registrar métricas
+            long endTime = System.nanoTime();
+            double durationSeconds = (endTime - startTime) / 1_000_000_000.0;
+            
+            Attributes attributes = Attributes.of(
+                ENDPOINT_KEY, "/api/simulacao/{id}",
+                METHOD_KEY, "GET",
+                STATUS_KEY, status
+            );
+            
+            httpServerDurationHistogram.record(durationSeconds, attributes);
+            httpServerRequestsCounter.add(1, attributes);
+            metricasService.registrarRequisicao("/api/simulacao/{id}", durationSeconds, Integer.parseInt(status));
+        }
+    }
+
+    /**
      * Endpoint para verificar saúde do serviço
      */
     @GET
     @Path("/health")
     @Operation(
-            summary = "Verificar saúde do serviço",
+            summary = "Verificar saúde do serviço de simulação",
             description = "Endpoint para verificar se o serviço de simulação está funcionando"
+    )
+    @APIResponse(
+        responseCode = "200",
+        description = "Serviço funcionando corretamente",
+        content = @Content(
+            mediaType = MediaType.APPLICATION_JSON,
+            schema = @Schema(implementation = HealthResponseDTO.class)
+        )
+    )
+    @APIResponse(
+        responseCode = "503",
+        description = "Serviço indisponível"
     )
     public Response health() {
         return Response.ok(HealthResponseDTO.builder()
