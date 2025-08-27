@@ -151,15 +151,6 @@ public class RateLimitService {
     }
 
     /**
-     * Remove um IP da lista de bloqueados (para uso administrativo)
-     */
-    public void unblockIp(String clientIp) {
-        blockedIps.remove(clientIp);
-        ipCounters.remove(clientIp);
-        log.info("[RATE LIMIT] IP {} desbloqueado manualmente", clientIp);
-    }
-
-    /**
      * Classe interna para armazenar contadores de requisições
      */
     private static class RateLimitCounter {

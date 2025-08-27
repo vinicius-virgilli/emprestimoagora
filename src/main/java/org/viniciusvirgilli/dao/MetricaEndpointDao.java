@@ -74,44 +74,4 @@ public class MetricaEndpointDao {
         }
     }
 
-    @Transactional
-    public List<MetricaEndpoint> buscarTodas() {
-        try {
-            TypedQuery<MetricaEndpoint> query = local.createQuery(
-                    "SELECT m FROM MetricaEndpoint m ORDER BY m.dataReferencia DESC, m.nomeEndpoint",
-                    MetricaEndpoint.class
-            );
-            return query.getResultList();
-        } catch (Exception e) {
-            log.error("Erro ao buscar todas as métricas", e);
-            return List.of();
-        }
-    }
-
-    @Transactional
-    public void deletarPorData(LocalDate dataReferencia) {
-        try {
-            int deletados = local.createQuery(
-                    "DELETE FROM MetricaEndpoint m WHERE m.dataReferencia = :data"
-            )
-            .setParameter("data", dataReferencia)
-            .executeUpdate();
-            
-            log.info("Deletadas {} métricas para a data: {}", deletados, dataReferencia);
-        } catch (Exception e) {
-            log.error("Erro ao deletar métricas para a data: {}", dataReferencia, e);
-            throw e;
-        }
-    }
-
-    @Transactional
-    public void deletarTodas() {
-        try {
-            int deletados = local.createQuery("DELETE FROM MetricaEndpoint").executeUpdate();
-            log.info("Deletadas {} métricas do banco de dados", deletados);
-        } catch (Exception e) {
-            log.error("Erro ao deletar todas as métricas", e);
-            throw e;
-        }
-    }
 }

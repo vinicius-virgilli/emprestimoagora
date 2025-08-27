@@ -280,32 +280,4 @@ public class MetricasService {
         );
     }
 
-    /**
-     * Força a persistência do cache atual
-     */
-    public void forcarPersistencia() {
-        log.info("Forçando persistência síncrona das métricas em cache");
-        persistirCacheNoBanco();
-    }
-
-    /**
-     * Limpa todas as métricas do banco de dados
-     */
-    public void zerarTodasMetricas() {
-        endpointMetricsCache.clear();
-        metricaEndpointDao.deletarTodas();
-        log.info("Todas as métricas foram zeradas");
-    }
-
-    /**
-     * Limpa métricas de uma data específica
-     */
-    public void zerarMetricasPorData(LocalDate data) {
-        if (data.equals(LocalDate.now())) {
-            endpointMetricsCache.clear();
-        }
-        metricaEndpointDao.deletarPorData(data);
-        log.info("Métricas zeradas para a data: {}", data);
-    }
-
 }

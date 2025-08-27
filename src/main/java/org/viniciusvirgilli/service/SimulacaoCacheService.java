@@ -229,8 +229,4 @@ public class SimulacaoCacheService {
             this.lastInvalidation = lastInvalidation;
         }
     }
-
-    public void shutdown() {
-        scheduler.shutdown();
-    }
 }
