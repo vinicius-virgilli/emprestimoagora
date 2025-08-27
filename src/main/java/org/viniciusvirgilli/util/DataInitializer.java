@@ -7,6 +7,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.Observes;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
+import lombok.Getter;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.viniciusvirgilli.model.hack.Produto;
 import org.viniciusvirgilli.dao.ProdutoDao;
@@ -16,10 +17,6 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.logging.Logger;
 
-/**
- * Classe responsável por inicializar dados básicos na aplicação
- * Insere produtos padrão se não existirem no banco de dados
- */
 @ApplicationScoped
 public class DataInitializer {
 
@@ -33,28 +30,36 @@ public class DataInitializer {
 
     /**
      * Método executado na inicialização da aplicação
-     * Insere produtos padrão se não existirem e se estiver em perfil de desenvolvimento
+     * Insere produtos padrão se não existirem e se estiver em perfil de desenvolvimento ou de teste
      */
     @Transactional
     public void onStart(@Observes StartupEvent ev) {
         LOGGER.info("Iniciando verificação e inserção de dados padrão...");
         LOGGER.info("Perfil ativo: " + activeProfile);
-        
-        // Só insere dados se estiver em perfil h2 ou postgres (desenvolvimento/teste)
-        if (!"h2".equals(activeProfile) && !"postgres".equals(activeProfile)) {
+
+        if (!"dev".equals(activeProfile) & !"test".equals(activeProfile)) {
             LOGGER.info("Perfil " + activeProfile + " não permite inserção automática de dados. Pulando inicialização.");
             return;
         }
         
-        // Verifica se já existem produtos no banco
-        long totalProdutos = produtoDao.count();
-        
-        if (totalProdutos == 0) {
-            LOGGER.info("Nenhum produto encontrado. Inserindo dados padrão...");
-            inserirProdutosPadrao();
-            LOGGER.info("Dados padrão inseridos com sucesso!");
-        } else {
-            LOGGER.info("Produtos já existem no banco de dados. Total: " + totalProdutos);
+        try {
+            List<Produto> produtosExistentes = null;
+            
+            try {
+                produtosExistentes = produtoDao.findAll();
+            } catch (Exception e) {
+                LOGGER.info("Tabela ainda não existe ou não está acessível. Tentando inserir dados padrão...");
+            }
+            
+            if (produtosExistentes == null || produtosExistentes.isEmpty()) {
+                LOGGER.info("Nenhum produto encontrado. Inserindo dados padrão...");
+                inserirProdutosPadrao();
+                LOGGER.info("Dados padrão inseridos com sucesso!");
+            } else {
+                LOGGER.info("Produtos já existem no banco de dados. Total: " + produtosExistentes.size());
+            }
+        } catch (Exception e) {
+            LOGGER.severe("Erro ao verificar/inserir dados padrão: " + e.getMessage());
         }
     }
 
@@ -63,20 +68,17 @@ public class DataInitializer {
      */
     private void inserirProdutosPadrao() {
         try {
-            // Carrega o arquivo JSON do classpath
             InputStream inputStream = getClass().getClassLoader().getResourceAsStream("produtos-iniciais.json");
             if (inputStream == null) {
                 LOGGER.severe("Arquivo produtos-iniciais.json não encontrado no classpath");
                 return;
             }
 
-            // Parse do JSON para lista de ProdutoDTO
             ObjectMapper objectMapper = new ObjectMapper();
             List<ProdutoDTO> produtosDTO = objectMapper.readValue(inputStream, new TypeReference<List<ProdutoDTO>>() {});
 
-            // Insere cada produto se não existir
             for (ProdutoDTO produtoDTO : produtosDTO) {
-                if (!produtoDao.existsByCodigoProduto(produtoDTO.getCodigoProduto())) {
+                try {
                     Produto produto = new Produto(
                         produtoDTO.getCodigoProduto(),
                         produtoDTO.getNomeProduto(),
@@ -88,18 +90,20 @@ public class DataInitializer {
                     );
                     produtoDao.persist(produto);
                     LOGGER.info("Produto inserido: " + produto.nomeProduto + " (ID: " + produto.codigoProduto + ")");
+                } catch (Exception e) {
+                    LOGGER.warning("Erro ao inserir produto " + produtoDTO.getCodigoProduto() + ": " + e.getMessage());
                 }
             }
 
         } catch (Exception e) {
             LOGGER.severe("Erro ao carregar produtos do arquivo JSON: " + e.getMessage());
-            e.printStackTrace();
         }
     }
 
     /**
      * DTO para deserialização do JSON
      */
+    @Getter
     public static class ProdutoDTO {
         private Integer codigoProduto;
         private String nomeProduto;
@@ -108,27 +112,5 @@ public class DataInitializer {
         private Short numeroMaximoMeses;
         private BigDecimal valorMinimo;
         private BigDecimal valorMaximo;
-
-        // Getters e Setters
-        public Integer getCodigoProduto() { return codigoProduto; }
-        public void setCodigoProduto(Integer codigoProduto) { this.codigoProduto = codigoProduto; }
-
-        public String getNomeProduto() { return nomeProduto; }
-        public void setNomeProduto(String nomeProduto) { this.nomeProduto = nomeProduto; }
-
-        public BigDecimal getPercentualTaxaJuros() { return percentualTaxaJuros; }
-        public void setPercentualTaxaJuros(BigDecimal percentualTaxaJuros) { this.percentualTaxaJuros = percentualTaxaJuros; }
-
-        public Short getNumeroMinimoMeses() { return numeroMinimoMeses; }
-        public void setNumeroMinimoMeses(Short numeroMinimoMeses) { this.numeroMinimoMeses = numeroMinimoMeses; }
-
-        public Short getNumeroMaximoMeses() { return numeroMaximoMeses; }
-        public void setNumeroMaximoMeses(Short numeroMaximoMeses) { this.numeroMaximoMeses = numeroMaximoMeses; }
-
-        public BigDecimal getValorMinimo() { return valorMinimo; }
-        public void setValorMinimo(BigDecimal valorMinimo) { this.valorMinimo = valorMinimo; }
-
-        public BigDecimal getValorMaximo() { return valorMaximo; }
-        public void setValorMaximo(BigDecimal valorMaximo) { this.valorMaximo = valorMaximo; }
     }
 }
