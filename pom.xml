@@ -145,6 +145,17 @@
             <artifactId>azure-messaging-eventhubs</artifactId>
             <version>5.18.0</version>
         </dependency>
+        
+        <!-- Dependências para Rate Limiting -->
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-smallrye-fault-tolerance</artifactId>
+        </dependency>
+        
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-redis-client</artifactId>
+        </dependency>
     </dependencies>
 
     <build>
