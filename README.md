@@ -1,32 +1,35 @@
-# 📌 API Empréstimo Agora - [Hackathon Caixa 1ª fase]
+# API Empréstimo Agora - [Hackathon Caixa 1ª fase]
 
 💳 **Simulador de Empréstimos** desenvolvido em **Java 17 + Quarkus**
 
 ## ⚡ Execução Rápida
 
-### 🔹 Opção 1 — Docker Compose (✅ Recomendado)
-
+### 🔹 Opção 1 — Docker Compose (Recomendado)
+ Pré-requisitos: Docker instalado
 ```bash
 docker-compose up -d --build 
 ```
-
-### 🔹 Opção 2 — Build e Execução Manual
-
+---
+### 🔹 Opção 2 — Build e Execução Manual (Modo Desenvolvimento)
+ Pré-requisitos:
+- Java 17+ instalado
+- Maven Wrapper (./mvnw) ou Maven 3.9+ instalado
+Maven Wrapper (./mvnw) ou Maven 3.9+ instalado
 ```bash
 # Build
-./mvnw clean package -DskipTests
+./mvnw clean package
 
-# Execução
-java -jar target/*-runner.jar
+# Execução em modo desenvolvimento
+./mvnw quarkus:dev
 ```
 ---
-## 🌐 Links de acesso
+## Links de acesso
 
 - **API** → http://localhost:8080
 - **Swagger UI** → http://localhost:8080/q/swagger-ui
 - **collection** → [API Emprestimo Agora.postman_collection.json](API%20Emprestimo%20Agora.postman_collection.json)
 ---
-## 🚀 Diferenciais Implementados
+## Diferenciais Implementados
 
 ### 🔒 Rate Limiting
 
@@ -57,11 +60,11 @@ java -jar target/*-runner.jar
 
 - ### Testes unitários
 ---
-### 🧠 Cache Inteligente
+### 🧠 Cache
 - Cache de produtos com invalidação automática.
 - Cache de listagens com paginação otimizada.
 ---
-- ## 🔄 Processamento assíncrono
+## 🔄 Processamento assíncrono
 - Envio de eventos para o Azure Event Hub, e
 - Persistência das métricas no Postgres local em segundo plano.
 ---
