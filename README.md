@@ -19,13 +19,13 @@ docker-compose up -d --build
 # Execução
 java -jar target/*-runner.jar
 ```
-
+---
 ## 🌐 Links de acesso
 
 - **API** → http://localhost:8080
 - **Swagger UI** → http://localhost:8080/q/swagger-ui
-- **collection** → [collection.postman_collection.json](collection.postman_collection.json)
-
+- **collection** → [API Emprestimo Agora.postman_collection.json](API%20Emprestimo%20Agora.postman_collection.json)
+---
 ## 🚀 Diferenciais Implementados
 
 ### 🔒 Rate Limiting
@@ -37,11 +37,14 @@ java -jar target/*-runner.jar
 ### Aqui podemos observar os testes de carga após implementar o rate limit.
 ![Imagem dos testes](imagens/testes-rate-limit.png)
 ---
+---
 ### O usuário é bloqueado ao ultrapassar o limite de requisições por período
 ![imagem do erro](imagens/bloqueio.png)
 ---
+---
 ### Recebe erro 429 com detalhes dos limites de requisições ao usuário.
 ![imagem do erro](imagens/postman.png)
+---
 ---
 ### Mensagens de erro personalizadas
 ![imagem do erro](imagens/mensagem.png)
@@ -49,7 +52,7 @@ java -jar target/*-runner.jar
 ---
 ### 📁 Arquivo .env
 
-O projeto utiliza arquivo `.env` para configuração de variáveis de ambiente
+- O projeto utiliza arquivo `.env` para configuração de variáveis de ambiente
 ---
 
 - ### Testes unitários
@@ -57,6 +60,11 @@ O projeto utiliza arquivo `.env` para configuração de variáveis de ambiente
 ### 🧠 Cache Inteligente
 - Cache de produtos com invalidação automática.
 - Cache de listagens com paginação otimizada.
+---
+- ## 🔄 Processamento assíncrono
+- Envio de eventos para o Azure Event Hub, e
+- Persistência das métricas no Postgres local em segundo plano.
+---
 
 ### 📊 Endpoints Extras
 
@@ -64,7 +72,7 @@ O projeto utiliza arquivo `.env` para configuração de variáveis de ambiente
 - Busca de transação por ID.
 - Parâmetro opcional na busca paginada para valores referentes ao sistema SAC ou PRICE.
 - Parâmetro opcional de data no endpoint de telemetria.
-
+---
 
 ## ⚙️ Funcionalidades Obrigatórias (Core)
 
@@ -76,7 +84,7 @@ O projeto utiliza arquivo `.env` para configuração de variáveis de ambiente
   - SQL Server (integrações).
 - Backup persistente com volumes Docker.
 
-### ✅ Validação e Robustez
+### ✅ Validação personalizada
 
 - Bean Validation com mensagens customizadas.
 - DTOs tipados → validação + serialização automática.
@@ -88,9 +96,6 @@ O projeto utiliza arquivo `.env` para configuração de variáveis de ambiente
 - Transações com rollback automático.
 - OpenTelemetry → rastreamento distribuído.
 
-### ☁️ Integrações
-
-- **Event Hub**: envio assíncrono para Azure Event Hub para não bloquear a resposta ao cliente.
 
 ### 🛠️ Desenvolvimento Amigável
 
