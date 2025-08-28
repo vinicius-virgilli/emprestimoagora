@@ -62,14 +62,18 @@ public class RateLimitInterceptor implements ContainerRequestFilter, ContainerRe
             RateLimitService.RateLimitStats stats = rateLimitService.getStats(clientIp);
             
             // Criar resposta de erro 429 Too Many Requests
+            // quero exibir na resposta os limites de requisições e até quando o usuário será desbloqueado.
             Response response = Response.status(429)
                 .entity(Map.of(
-                    "error", "Rate limit exedido!",
-                    "message", "Muitas requisicoes. Tente novamente mais tarde.",
-                    "requestsInLastSecond", stats.getRequestsInLastSecond(),
-                    "requestsInLastMinute", stats.getRequestsInLastMinute(),
-                    "requestsInLastHour", stats.getRequestsInLastHour(),
-                    "blockedUntil", stats.getBlockedUntil() != null ? stats.getBlockedUntil().toString() : null
+                    "erro", "Limite de requisições excedido",
+                    "mensagem", "Você fez muitas requisições. Aguarde um momento antes de tentar novamente.",
+                    "limites", Map.of(
+                        "porSegundo", requestsPerSecond,
+                        "porMinuto", requestsPerMinute,
+                        "porHora", requestsPerHour
+                    ),
+                    "bloqueadoAte", stats.getBlockedUntil() != null ? stats.getBlockedUntil().toString() : null,
+                    "dica", "Aguarde alguns segundos e tente novamente"
                 ))
                 .header(RATE_LIMIT_HEADER_LIMIT, String.format("%d per second, %d per minute, %d per hour", 
                     requestsPerSecond, requestsPerMinute, requestsPerHour))

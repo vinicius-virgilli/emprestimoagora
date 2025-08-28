@@ -54,7 +54,7 @@ public class RateLimitService {
 
         // Verifica se o IP está bloqueado
         if (isIpBlocked(clientIp)) {
-            log.warn("[RATE LIMIT] IP {} está bloqueado até {}", clientIp, blockedIps.get(clientIp));
+            log.warn("[RATE LIMIT] IP {} esta bloqueado ate {}", clientIp, blockedIps.get(clientIp));
             return false;
         }
 
@@ -66,21 +66,21 @@ public class RateLimitService {
 
         // Verifica limite por segundo
         if (counter.getRequestsInLastSecond() >= requestsPerSecond) {
-            log.warn("[RATE LIMIT] IP {} excedeu limite de {} requisições por segundo", clientIp, requestsPerSecond);
+            log.warn("[RATE LIMIT] IP {} excedeu limite de {} requisicoes por segundo", clientIp, requestsPerSecond);
             blockIp(clientIp);
             return false;
         }
 
         // Verifica limite por minuto
         if (counter.getRequestsInLastMinute() >= requestsPerMinute) {
-            log.warn("[RATE LIMIT] IP {} excedeu limite de {} requisições por minuto", clientIp, requestsPerMinute);
+            log.warn("[RATE LIMIT] IP {} excedeu limite de {} requisicoes por minuto", clientIp, requestsPerMinute);
             blockIp(clientIp);
             return false;
         }
 
         // Verifica limite por hora
         if (counter.getRequestsInLastHour() >= requestsPerHour) {
-            log.warn("[RATE LIMIT] IP {} excedeu limite de {} requisições por hora", clientIp, requestsPerHour);
+            log.warn("[RATE LIMIT] IP {} excedeu limite de {} requisicoes por hora", clientIp, requestsPerHour);
             blockIp(clientIp);
             return false;
         }
@@ -88,7 +88,7 @@ public class RateLimitService {
         // Incrementa contadores
         counter.incrementRequests();
         
-        log.debug("[RATE LIMIT] IP {} - Requisições no último segundo: {}, minuto: {}, hora: {}", 
+        log.debug("[RATE LIMIT] IP {} - Requisicoes no ultimo segundo: {}, minuto: {}, hora: {}", 
                  clientIp, counter.getRequestsInLastSecond(), counter.getRequestsInLastMinute(), counter.getRequestsInLastHour());
 
         return true;
@@ -117,7 +117,7 @@ public class RateLimitService {
     private void blockIp(String clientIp) {
         LocalDateTime blockUntil = LocalDateTime.now().plusMinutes(blockDurationMinutes);
         blockedIps.put(clientIp, blockUntil);
-        log.warn("[RATE LIMIT] IP {} bloqueado até {}", clientIp, blockUntil);
+        log.warn("[RATE LIMIT] IP {} bloqueado ate {}", clientIp, blockUntil);
     }
 
     /**

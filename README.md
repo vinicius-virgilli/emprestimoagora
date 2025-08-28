@@ -1,4 +1,4 @@
-# 📌 API Empréstimo Agora
+# 📌 API Empréstimo Agora - [Hackathon Caixa 1ª fase]
 
 💳 **Simulador de Empréstimos** desenvolvido em **Java 17 + Quarkus**
 
@@ -7,7 +7,7 @@
 ### 🔹 Opção 1 — Docker Compose (✅ Recomendado)
 
 ```bash
-docker-compose up -d
+docker-compose up -d --build 
 ```
 
 ### 🔹 Opção 2 — Build e Execução Manual
@@ -20,41 +20,43 @@ docker-compose up -d
 java -jar target/*-runner.jar
 ```
 
-## 🌐 URLs de Acesso
+## 🌐 Links de acesso
 
 - **API** → http://localhost:8080
 - **Swagger UI** → http://localhost:8080/q/swagger-ui
+- **collection** → [collection.postman_collection.json](collection.postman_collection.json)
 
 ## 🚀 Diferenciais Implementados
 
-### 🔒 Rate Limiting Avançado
+### 🔒 Rate Limiting
 
 - Definido após testes de carga com JMeter para obter a taxa ideal de requests por segundo, protegendo a aplicação sem limitar demais o uso.
 - **Limites**: 200 req/s, 12.000 req/min, 17.280.000 req/hora.
 - Bloqueio temporário inteligente para abusos.
-
-#### Aqui podemos observar os testes de carga após implementar o rate limit.
+---
+### Aqui podemos observar os testes de carga após implementar o rate limit.
 ![Imagem dos testes](imagens/testes-rate-limit.png)
-
-#### O usuário é bloqueado ao ultrapassar o limite de requisições por período
+---
+### O usuário é bloqueado ao ultrapassar o limite de requisições por período
 ![imagem do erro](imagens/bloqueio.png)
-
-#### Recebe erro 429 com detalhes dos limites de requisições ao usuário.
+---
+### Recebe erro 429 com detalhes dos limites de requisições ao usuário.
 ![imagem do erro](imagens/postman.png)
-
-#### Mensagens de erro personalizadas
+---
+### Mensagens de erro personalizadas
 ![imagem do erro](imagens/mensagem.png)
+---
+---
+### 📁 Arquivo .env
 
+O projeto utiliza arquivo `.env` para configuração de variáveis de ambiente
+---
 
-- ### Testes unitários 
-
-
+- ### Testes unitários
+---
 ### 🧠 Cache Inteligente
-
-- Cache em memória com TTL configurável.
 - Cache de produtos com invalidação automática.
 - Cache de listagens com paginação otimizada.
-- Estatísticas de cache em tempo real.
 
 ### 📊 Endpoints Extras
 
@@ -62,6 +64,7 @@ java -jar target/*-runner.jar
 - Busca de transação por ID.
 - Parâmetro opcional na busca paginada para valores referentes ao sistema SAC ou PRICE.
 - Parâmetro opcional de data no endpoint de telemetria.
+
 
 ## ⚙️ Funcionalidades Obrigatórias (Core)
 
