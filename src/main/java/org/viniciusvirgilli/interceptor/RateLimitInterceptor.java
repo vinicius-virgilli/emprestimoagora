@@ -64,8 +64,8 @@ public class RateLimitInterceptor implements ContainerRequestFilter, ContainerRe
             // Criar resposta de erro 429 Too Many Requests
             Response response = Response.status(429)
                 .entity(Map.of(
-                    "error", "Rate limit exceeded",
-                    "message", "Too many requests. Please try again later.",
+                    "error", "Rate limit exedido!",
+                    "message", "Muitas requisicoes. Tente novamente mais tarde.",
                     "requestsInLastSecond", stats.getRequestsInLastSecond(),
                     "requestsInLastMinute", stats.getRequestsInLastMinute(),
                     "requestsInLastHour", stats.getRequestsInLastHour(),

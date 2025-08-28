@@ -33,6 +33,22 @@ java -jar target/*-runner.jar
 - **Limites**: 200 req/s, 12.000 req/min, 17.280.000 req/hora.
 - Bloqueio temporário inteligente para abusos.
 
+#### Aqui podemos observar os testes de carga após implementar o rate limit.
+![Imagem dos testes](imagens/testes-rate-limit.png)
+
+#### O usuário é bloqueado ao ultrapassar o limite de requisições por período
+![imagem do erro](imagens/bloqueio.png)
+
+#### Recebe erro 429 com detalhes dos limites de requisições ao usuário.
+![imagem do erro](imagens/postman.png)
+
+#### Mensagens de erro personalizadas
+![imagem do erro](imagens/mensagem.png)
+
+
+- ### Testes unitários 
+
+
 ### 🧠 Cache Inteligente
 
 - Cache em memória com TTL configurável.

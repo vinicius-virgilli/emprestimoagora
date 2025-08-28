@@ -1,0 +1,219 @@
+{
+	"info": {
+		"_postman_id": "ba695c1d-ccf8-403a-99e6-c35fc303a88f",
+		"name": "API Emprestimo Agora",
+		"description": "Coleção completa dos endpoints da API Emprestimo Agora para simulação de empréstimos, consulta de volume e telemetria.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json",
+		"_exporter_id": "39992751"
+	},
+	"item": [
+		{
+			"name": "Simulação de Empréstimo",
+			"item": [
+				{
+					"name": "Processar Simulação",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"valorDesejado\": 90000.00,\n  \"prazo\": 25\n}"
+						},
+						"url": "{{base_url}}/api/simulacao/processar",
+						"description": "Processa uma simulação de empréstimo calculando as parcelas pelos métodos SAC e PRICE. Valida os dados de entrada, persiste no banco local e envia evento para o Event Hub."
+					},
+					"response": []
+				},
+				{
+					"name": "Health Check - Simulação",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": "{{base_url}}/api/simulacao/health",
+						"description": "Verifica a saúde do serviço de simulação"
+					},
+					"response": []
+				}
+			],
+			"description": "Endpoints para processamento de simulações de empréstimo"
+		},
+		{
+			"name": "Listagem de Simulações",
+			"item": [
+				{
+					"name": "Listar Simulações",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/simulacoes/paginada?pagina=0&tamanhoPagina=50",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"simulacoes",
+								"paginada"
+							],
+							"query": [
+								{
+									"key": "pagina",
+									"value": "0",
+									"description": "Número da página (padrão: 0)"
+								},
+								{
+									"key": "tamanhoPagina",
+									"value": "50",
+									"description": "Tamanho da página (padrão: 10, máximo: 100)"
+								},
+								{
+									"key": "tipoEmprestimo",
+									"value": "SAC",
+									"disabled": true
+								}
+							]
+						},
+						"description": "Lista simulações realizadas com paginação"
+					},
+					"response": []
+				},
+				{
+					"name": "Listar Simulação por ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": "{{base_url}}/api/simulacao/1",
+						"description": "Lista simulações realizadas com paginação"
+					},
+					"response": []
+				},
+				{
+					"name": "Health Check - Listagem",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": "{{base_url}}/api/simulacoes/health",
+						"description": "Verifica a saúde do serviço de listagem"
+					},
+					"response": []
+				}
+			],
+			"description": "Endpoints para consulta de simulações realizadas"
+		},
+		{
+			"name": "Volume por Produto",
+			"item": [
+				{
+					"name": "Volume Diário",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/volume/diario?dataReferencia=2025-08-25&codigoProduto=1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"volume",
+								"diario"
+							],
+							"query": [
+								{
+									"key": "dataReferencia",
+									"value": "2025-08-25"
+								},
+								{
+									"key": "codigoProduto",
+									"value": "1"
+								},
+								{
+									"key": "tipoSimulacao",
+									"value": "SAC",
+									"disabled": true
+								}
+							]
+						},
+						"description": "Retorna o volume de simulações realizadas por produto em uma data específica"
+					},
+					"response": []
+				},
+				{
+					"name": "Health Check - Volume por Produto",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": "{{base_url}}/api/simulacoes/health",
+						"description": "Verifica a saúde do serviço de listagem"
+					},
+					"response": []
+				}
+			],
+			"description": "Endpoints para consulta de volume diário e por período"
+		},
+		{
+			"name": "Produtos",
+			"item": [
+				{
+					"name": "Listar Produtos",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": "{{base_url}}/api/produtos",
+						"description": "Retorna a lista de todos os produtos disponíveis para simulação"
+					},
+					"response": []
+				},
+				{
+					"name": "Health Check - Produtos",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": "{{base_url}}/api/produtos/health",
+						"description": "Verifica a saúde do serviço de produtos"
+					},
+					"response": []
+				}
+			],
+			"description": "Endpoints para consulta de produtos disponíveis"
+		},
+		{
+			"name": "Telemetria",
+			"item": [
+				{
+					"name": "Telemetria Geral",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": "{{base_url}}/api/telemetria",
+						"description": "Consulta dados de telemetria geral do sistema"
+					},
+					"response": []
+				},
+				{
+					"name": "Health Check - Telemetria",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": "{{base_url}}/api/telemetria/health",
+						"description": "Verifica a saúde do serviço de telemetria"
+					},
+					"response": []
+				}
+			],
+			"description": "Endpoints para consulta de dados de telemetria e performance"
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8080",
+			"description": "URL base da API Emprestimo Agora"
+		}
+	]
+}
